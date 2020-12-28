@@ -1,0 +1,6 @@
+.vscode
+/tmp
+/lib
+/node_modules
+*.jsonl
+__nock-fixtures__

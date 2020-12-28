@@ -1,0 +1,51 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": "."
+    },
+    {
+      "name": "collector",
+      "path": "collector"
+    },
+    {
+      "name": "trainer",
+      "path": "trainer"
+    },
+    {
+      "name": "predictor",
+      "path": "predictor"
+    }
+  ],
+  "settings": {
+    "jest.disabledWorkspaceFolders": ["root", "predictor", "trainer"],
+    "todo.file.exclude": [
+      "**/.!(todo|todos|task|tasks)/**",
+      "**/_output/**",
+      "**/bower_components/**",
+      "**/build/**",
+      "**/dist/**",
+      "**/venv/**",
+      "**/node_modules/**",
+      "**/out/**",
+      "**/output/**",
+      "**/release/**",
+      "**/releases/**",
+      "**/static/**",
+      "**/target/**",
+      "**/third_party/**",
+      "**/vendor/**",
+      "**/data/**"
+    ],
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "collector": true,
+      "trainer": true,
+      "predictor": true
+    }
+  }
+}

@@ -1,0 +1,54 @@
+version: '3.2'
+
+services:
+  db:
+    image: mongo:latest
+    restart: unless-stopped
+      #command: mongod --auth
+    ports:
+      - "27017:27017"
+        # environment:
+      #MONGO_URI: ${MONGO_URI}
+    #   VIRTUAL_HOST: 
+    #   VIRTUAL_PORT: 27017
+    volumes:
+      - ./data/mongo:/data/db
+    networks:
+      - default
+      # - webproxy
+
+  redis:
+    restart: unless-stopped
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    # environment:
+    #   VIRTUAL_HOST: 
+    #   VIRTUAL_PORT: 6379
+    # volumes:
+    #   - ./data/redis:/data
+    networks:
+      - default
+      # - webproxy
+
+  scheduler:
+    build: ./collector
+    image: pkg.uechi.io/vespa-collector
+    restart: unless-stopped
+    command: node ./lib/scheduler.js
+    depends_on:
+      - redis
+
+  worker:
+    image: pkg.uechi.io/vespa-collector
+    restart: unless-stopped
+    environment:
+      JOB_CONCURRENCY: 200
+    depends_on:
+      - redis
+      - db
+
+networks:
+  webproxy:
+    external:
+      name: ${NETWORK:-webproxy}
