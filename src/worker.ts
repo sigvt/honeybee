@@ -88,22 +88,34 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       const grouped = groupBy(actionsWithOrigin, "type");
       const insertOptions = { ordered: false };
 
-      try {
-        await Promise.all<unknown>(
-          (Object.keys(grouped) as Action["type"][]).map((key) => {
-            const payload = grouped[key];
-            switch (key) {
-              case "addChatItemAction":
-                return Chat.insertMany(payload, insertOptions);
-              case "markChatItemAsDeletedAction":
-                return DeleteAction.insertMany(payload, insertOptions);
-              case "markChatItemsByAuthorAsDeletedAction":
-                return BanAction.insertMany(payload, insertOptions);
-            }
-          })
-        );
-      } catch (err) {
-        console.log("ERROR", err);
+      const bulkWrite = (Object.keys(grouped) as Action["type"][]).map(
+        (key) => {
+          const payload = grouped[key];
+          switch (key) {
+            case "addChatItemAction":
+              return Chat.insertMany(payload, insertOptions);
+            case "markChatItemAsDeletedAction":
+              return DeleteAction.insertMany(payload, insertOptions);
+            case "markChatItemsByAuthorAsDeletedAction":
+              return BanAction.insertMany(payload, insertOptions);
+            default:
+              const _exhaust: never = key;
+              return _exhaust;
+          }
+        }
+      );
+
+      for (const write of bulkWrite) {
+        try {
+          await write;
+        } catch (err) {
+          // insertedDocs: []
+          // result: BulkWriteResult,
+          // writeErrors: WriteError
+          // code: number
+
+          console.log("ERROR", err);
+        }
       }
 
       // fancy logging

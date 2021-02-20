@@ -36,7 +36,7 @@ services:
     environment:
       REDIS_URI: ${REDIS_URI:-redis://redis}
       MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@db/vespa
-      JOB_CONCURRENCY: 100
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-100}
     depends_on:
       - redis
       - db
