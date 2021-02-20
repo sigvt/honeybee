@@ -24,7 +24,7 @@ queue.on("stalled", (jobId) => {
 });
 
 queue.on("job succeeded", async (jobId, result: Result) => {
-  console.log("JOB COMPLETED", jobId, result.result);
+  console.log("JOB COMPLETED", jobId, result);
 
   const job = await queue.getJob(jobId);
 

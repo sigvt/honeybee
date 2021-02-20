@@ -4,6 +4,9 @@ services:
   db:
     image: mongo:latest
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
     volumes:
@@ -31,9 +34,9 @@ services:
     image: pkg.uechi.io/vespa-honeybee
     restart: unless-stopped
     environment:
-      REDIS_URI: redis://redis
-      MONGO_URI: mongodb://db/vespa
-      JOB_CONCURRENCY: 10
+      REDIS_URI: ${REDIS_URI:-redis://redis}
+      MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@db/vespa
+      JOB_CONCURRENCY: 100
     depends_on:
       - redis
       - db

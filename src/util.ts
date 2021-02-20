@@ -92,3 +92,15 @@ export class DeltaCollection {
     }
   }
 }
+
+export function groupBy<T, K extends keyof T, S extends Extract<T[K], string>>(
+  lst: T[],
+  key: K
+) {
+  return lst.reduce((result, o) => {
+    const index = o[key] as S;
+    if (!result[index]) result[index] = [];
+    result[index].push(o as any);
+    return result;
+  }, {} as { [k in S]: (T extends { [s in K]: k } ? T : never)[] });
+}

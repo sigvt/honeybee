@@ -2,5 +2,8 @@
 /tmp
 /lib
 /node_modules
+/data
 *.jsonl
 __nock-fixtures__
+.env
+.envrc

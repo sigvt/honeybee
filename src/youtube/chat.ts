@@ -17,7 +17,7 @@ import { Client } from "./context";
 export function getContinuation(
   continuationContents: RawContinuationContents
 ): TimedContinuation | undefined {
-  // observed keys: invalidationContinuationData | timedContinuationData | liveChatReplayContinuationData
+  // observed k: invalidationContinuationData | timedContinuationData | liveChatReplayContinuationData
   // continuations[1] would be playerSeekContinuationData
   if (
     Object.keys(
@@ -204,9 +204,14 @@ export async function fetchChat(
       body: JSON.stringify(requestBody),
     }).then((res) => res.json());
   } catch (err) {
-    console.log(err, err.code);
-    // to prevent prolonging delay
-    return undefined;
+    switch (err.code) {
+      case "ETIMEOUT":
+        // to prevent prolonging delay
+        return undefined;
+      default:
+        console.log(err);
+        throw err;
+    }
   }
 
   if (res.error) {
@@ -306,7 +311,8 @@ export async function* iterateChat({
   while (true) {
     const chatResponse = await fetchChat(token, apiKey, client, isLiveChat);
     if (!chatResponse) {
-      break; // live chat is over
+      // live chat is over
+      break;
     }
 
     // handle chats
@@ -316,8 +322,9 @@ export async function* iterateChat({
 
     // refresh continuation token
     if (!continuation) {
+      // end of the chain
       console.log("chatResponse", chatResponse);
-      break; // end of the chain
+      break;
     }
     token = continuation.token;
   }

@@ -1,53 +1,51 @@
-# 🐝 Vespa
+# Workerbee
 
-The final solution to the YouTube live chat trolls.
+```bash
+NODE_OPTIONS=--max-old-space-size=32768 ts-node src/cli.ts
+```
 
-## key features
-
-- Gradient Boosted Decision Tree for spotting suspicious chat
-  - Hostile chat will be deleted.
-  - Suspicious chat will be flagged as `spam` with the confidence score and can be shut out later by defining filtering rule
-- Adaptive learning based off of moderator's activities
-- Offers OBS-ready chat frame armed with customizable filter rules for extra security
-
-## usage
+## Setup
 
 ```
 docker-compose up -d
 ```
 
-### Additional Worker
+## Add Worker
+
+```bash
+# in master node
+docker-compose exec db mongo -u vespa -p
+```
+
+```js
+use vespa
+
+db.createUser({
+  user: "worker-tokyo1",
+  pwd: passwordPrompt(), // or cleartext password
+  roles: [{ role: "readWrite", db: "vespa" }],
+  authenticationRestrictions: [
+    {
+      clientSource: ["<ip|cidr>"]
+    }
+  ]
+});
+```
 
 ```bash
 # in worklet
 cat secret | docker login pkg.uechi.io --username <user> --password-stdin
-docker run pkg.uechi.io/vespa-collector \
-  -e JOB_CONCURRENCY=50 \
-  -e MONGO_URI=mongodb://vespadb.forbital.com/vespa \
-  -e REDIS_URI=redis://vespaq.forbital.com
+docker run \
+  -e JOB_CONCURRENCY=80 \
+  -e MONGO_URI=mongodb://<user>:<pwd>@vespadb.forbital.com/vespa \
+  -e REDIS_URI=redis://vespaq.forbital.com \
+  pkg.uechi.io/vespa-collector
 ```
 
-## roadmap
+## Remove worker
 
-- collector
-  - [x] collect YouTube live chat and store it as JSON files.
-  - [x] run as cluster and watch task queue
-  - [ ] store chat to datastore
-- trainer
-  - [x] convert raw data into dataset for later use
-  - [x] load dataset and learn spam detector
-  - [ ] save weights for later use
-  - [ ] load previously trained weights and fine-tune for new data
-- predictor
-  - [ ] JSON API that returns a given chat is spam or not
-  - [ ] load weights and keep running as a HTTP server
-- admin
-  - [ ] annotate chat
-- front
-  - relay pushed actions stored in a database to the browser using websocket
-  - create filter rules
-  - show filtered chat window
-
-## references
-
-- https://github.com/xenova/chat-replay-downloader/blob/master/chat_replay_downloader.py
+```js
+use vespa
+show users
+db.dropUser("worker-singapore1")
+```

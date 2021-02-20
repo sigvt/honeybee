@@ -6,37 +6,11 @@ import DeleteAction from "./models/DeleteAction";
 import { getQueueInstance } from "./queue";
 import { Action, ReloadContinuationType } from "./types/chat";
 import { ErrorCode, Job, Result, Stats } from "./types/job";
+import { groupBy } from "./util";
 import { iterateChat } from "./youtube/chat";
-import { fetchContext, Metadata } from "./youtube/context";
+import { fetchContext } from "./youtube/context";
 
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
-
-// push action to database
-async function recordAction(action: Action, metadata: Metadata) {
-  const actionWithOrigin = {
-    ...action,
-    originVideoId: metadata.id,
-    originChannelId: metadata.channelId,
-  };
-
-  switch (actionWithOrigin.type) {
-    case "addChatItemAction":
-      try {
-        await Chat.create(actionWithOrigin);
-      } catch (err) {
-        if (err.code === 11000) {
-          // console.log(`DUPES ${actionWithOrigin.id}, ${delay}`);
-        }
-      }
-      break;
-    case "markChatItemAsDeletedAction":
-      await DeleteAction.create(actionWithOrigin);
-      break;
-    case "markChatItemsByAuthorAsDeletedAction":
-      await BanAction.create(actionWithOrigin);
-      break;
-  }
-}
 
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const { videoId } = job.data;
@@ -87,6 +61,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   workerLog(`${title} (${channelName}) isLive=${isLive}`);
 
   if (!isLive) {
+    console.log("!isLive");
     return { error: ErrorCode.UnknownError };
   }
 
@@ -104,9 +79,32 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   // iterate over live chat
   for await (const { actions, delay } of iterateChat(liveChatIteratorOptions)) {
     if (actions.length > 0) {
-      await Promise.all(
-        actions.map((action) => recordAction(action, metadata))
-      );
+      const actionsWithOrigin = actions.map((action) => ({
+        ...action,
+        originVideoId: metadata.id,
+        originChannelId: metadata.channelId,
+      }));
+
+      const grouped = groupBy(actionsWithOrigin, "type");
+      const insertOptions = { ordered: false };
+
+      try {
+        await Promise.all<unknown>(
+          (Object.keys(grouped) as Action["type"][]).map((key) => {
+            const payload = grouped[key];
+            switch (key) {
+              case "addChatItemAction":
+                return Chat.insertMany(payload, insertOptions);
+              case "markChatItemAsDeletedAction":
+                return DeleteAction.insertMany(payload, insertOptions);
+              case "markChatItemsByAuthorAsDeletedAction":
+                return BanAction.insertMany(payload, insertOptions);
+            }
+          })
+        );
+      } catch (err) {
+        console.log("ERROR", err);
+      }
 
       // fancy logging
       refreshStats(actions);
@@ -156,4 +154,6 @@ async function main() {
   });
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+});

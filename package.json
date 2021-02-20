@@ -1,6 +1,6 @@
 {
-  "name": "@vespa/collector",
-  "description": "vespa",
+  "name": "workerbee",
+  "description": "workerbee",
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
   "scripts": {
@@ -13,7 +13,7 @@
   "types": "lib/index.d.ts",
   "main": "index.js",
   "bin": {
-    "vespa": "lib/cli.js"
+    "workerbee": "lib/cli.js"
   },
   "files": [
     "lib"
@@ -58,7 +58,7 @@
   "bugs": {
     "url": "https://github.com/uetchy/vespa/issues"
   },
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0",
   "keywords": [
     "vespa"
   ],

@@ -4,7 +4,8 @@ COPY package.json yarn.lock /app/
 WORKDIR /app
 RUN yarn --frozen-lockfile
 
-COPY . /app
+COPY src /app/src
+COPY tsconfig.json /app/
 RUN yarn build
 
 CMD ["node", "./lib/worker.js"]

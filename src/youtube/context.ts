@@ -72,6 +72,9 @@ export function getClientFromContextConfig(config: ContextConfig): Client {
 }
 
 export function getAPIKeyFromContextConfig(config: ContextConfig): string {
+  if (!config?.innertubeApiKey) {
+    console.log(config);
+  }
   return config.innertubeApiKey;
 }
 
