@@ -11,3 +11,6 @@ start:
 
 logs:
 	docker-compose -f docker-compose.production.yml logs -f worker scheduler
+
+stats:
+	ts-node src/cli.ts stats
