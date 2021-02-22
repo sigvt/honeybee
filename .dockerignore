@@ -3,6 +3,7 @@
 /lib
 /node_modules
 /data
+/notes
 *.jsonl
 __nock-fixtures__
 .env

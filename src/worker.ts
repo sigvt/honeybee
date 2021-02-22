@@ -113,8 +113,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           // result: BulkWriteResult,
           // writeErrors: WriteError
           // code: number
-
-          console.log("ERROR", err);
+          console.log("ERROR", err.code, err.insertedDocs.length);
         }
       }
 

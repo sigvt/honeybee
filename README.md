@@ -1,16 +1,18 @@
-# Workerbee
+# honeybee
 
 ```bash
 NODE_OPTIONS=--max-old-space-size=32768 ts-node src/cli.ts
 ```
 
-## Setup
+## Configure
 
-```
-docker-compose up -d
+### Start scheduler and datastore
+
+```bash
+docker stack deploy -c docker-compose.production.yml
 ```
 
-## Add Worker
+### Add worker
 
 ```bash
 # in master node
@@ -37,18 +39,32 @@ authenticationRestrictions: [
 
 ```bash
 # in worklet
-cat secret | docker login pkg.uechi.io --username <user> --password-stdin
+cat <secret> | docker login pkg.uechi.io --username <user> --password-stdin
 docker run \
   -e JOB_CONCURRENCY=100 \
-  -e MONGO_URI=mongodb://<user>:<pwd>@<host>/<db> \
-  -e REDIS_URI=redis://:<password>@<host> \
+  -e MONGO_URI=mongodb://<user>:<pwd>@<host>:<port>/<db> \
+  -e REDIS_URI=redis://<user>:<password>@<host>:<port> \
+  --name vespa-worker \
+  --restart unless-stopped \
+  -d \
   pkg.uechi.io/vespa-honeybee
 ```
 
-## Remove worker
+### Remove worker
+
+```bash
+# in worklet
+docker rm vespa-worker
+```
 
 ```js
 use vespa
+db.dropUser("worker-tokyo1")
 show users
-db.dropUser("worker-singapore1")
+```
+
+## Show stats
+
+```bash
+docker-compose exec worker node lib/cli.js stats
 ```

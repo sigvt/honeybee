@@ -11,17 +11,21 @@ services:
       - "43205:27017"
     volumes:
       - ./data/mongo:/data/db
+    deploy:
+      placement:
+        constraints: [node.role == manager]
 
   redis:
     restart: unless-stopped
     image: redis:latest
     command: redis-server --requirepass ${REDIS_PASSWORD}
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
       - "32893:6379"
     volumes:
       - ./data/redis:/data
+    deploy:
+      placement:
+        constraints: [node.role == manager]
 
   scheduler:
     build: .
@@ -32,6 +36,9 @@ services:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
     depends_on:
       - redis
+    deploy:
+      placement:
+        constraints: [node.role == manager]
 
   worker:
     image: pkg.uechi.io/vespa-honeybee
@@ -43,3 +50,5 @@ services:
     depends_on:
       - redis
       - db
+    deploy:
+      replicas: 1
