@@ -8,15 +8,18 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
-      - "27017:27017"
+      - "43205:27017"
     volumes:
       - ./data/mongo:/data/db
 
   redis:
     restart: unless-stopped
     image: redis:latest
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - "32893:6379"
     volumes:
       - ./data/redis:/data
 
@@ -26,7 +29,7 @@ services:
     restart: unless-stopped
     command: node ./lib/scheduler.js
     environment:
-      REDIS_URI: redis://redis
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis
     depends_on:
       - redis
 
@@ -34,7 +37,7 @@ services:
     image: pkg.uechi.io/vespa-honeybee
     restart: unless-stopped
     environment:
-      REDIS_URI: ${REDIS_URI:-redis://redis}
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis
       MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@db/vespa
       JOB_CONCURRENCY: ${JOB_CONCURRENCY:-100}
     depends_on:

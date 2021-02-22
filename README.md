@@ -36,10 +36,10 @@ db.createUser({
 # in worklet
 cat secret | docker login pkg.uechi.io --username <user> --password-stdin
 docker run \
-  -e JOB_CONCURRENCY=80 \
-  -e MONGO_URI=mongodb://<user>:<pwd>@vespadb.forbital.com/vespa \
-  -e REDIS_URI=redis://vespaq.forbital.com \
-  pkg.uechi.io/vespa-collector
+  -e JOB_CONCURRENCY=100 \
+  -e MONGO_URI=mongodb://<user>:<pwd>@<host>/<db> \
+  -e REDIS_URI=redis://:<password>@<host> \
+  pkg.uechi.io/vespa-honeybee
 ```
 
 ## Remove worker
