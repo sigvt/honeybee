@@ -1,16 +1,22 @@
-all: build stop start logs
+all: build push deploy ps
 
 build:
-	docker-compose -f docker-compose.production.yml build
+	docker-compose build
+
+push:
+	docker-compose push
 
 stop:
-	docker-compose -f docker-compose.production.yml down
+	docker stack rm vespa
 
-start:
-	docker-compose -f docker-compose.production.yml up -d
+deploy:
+	docker stack deploy -c cluster.yml --with-registry-auth vespa
+
+ps:
+	docker stack ps vespa
 
 logs:
-	docker-compose -f docker-compose.production.yml logs -f worker scheduler
+	docker service logs -f vespa_worker
 
 stats:
-	ts-node src/cli.ts stats
+	docker run --rm --network vespa -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/vespa -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis ${HONEYBEE_IMAGE} node lib/cli.js stats

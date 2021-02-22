@@ -114,6 +114,9 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           // writeErrors: WriteError
           // code: number
           console.log("ERROR", err.code, err.insertedDocs.length);
+          if (err.code !== 11000) {
+            throw err;
+          }
         }
       }
 
@@ -134,7 +137,6 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 // collect live chat and save to mongodb
 async function main() {
   const disconnectFromMongo = await initMongo();
-
   const queue = getQueueInstance({ activateDelayedJobs: true });
 
   queue.on("ready", () => {
@@ -167,4 +169,5 @@ async function main() {
 
 main().catch((err) => {
   console.error(err);
+  process.exit(1);
 });

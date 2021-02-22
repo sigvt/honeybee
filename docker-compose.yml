@@ -3,14 +3,12 @@ version: "3.2"
 services:
   db:
     image: mongo:latest
-    restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
       - ./data/mongo:/data/db
 
   redis:
-    restart: unless-stopped
     image: redis:latest
     ports:
       - "6379:6379"
@@ -19,8 +17,7 @@ services:
 
   scheduler:
     build: .
-    image: pkg.uechi.io/vespa-honeybee
-    restart: unless-stopped
+    image: ${HONEYBEE_IMAGE}
     command: node ./lib/scheduler.js
     environment:
       REDIS_URI: redis://redis
@@ -28,8 +25,7 @@ services:
       - redis
 
   worker:
-    image: pkg.uechi.io/vespa-honeybee
-    restart: unless-stopped
+    image: ${HONEYBEE_IMAGE}
     environment:
       REDIS_URI: redis://redis
       MONGO_URI: mongodb://db/vespa

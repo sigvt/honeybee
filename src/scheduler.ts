@@ -112,6 +112,8 @@ async function handleStream(stream: HolodexLiveStreamInfo) {
 async function scrapeLiveStreams(invokedAt: Date) {
   console.log("FETCH INDEX", invokedAt);
 
+  await queue.checkStalledJobs();
+
   const liveAndUpcomingStreams = await fetchLiveStreams();
 
   if (liveAndUpcomingStreams.length === 0) return;
@@ -131,13 +133,28 @@ async function scrapeLiveStreams(invokedAt: Date) {
   }
 }
 
-const scheduler = schedule.scheduleJob("*/10 * * * *", scrapeLiveStreams);
-
-console.log("Vespa Scheduler has been started:", scheduler.name);
-
-scrapeLiveStreams(new Date());
-
 const TIMEOUT = 30 * 1000;
+
+async function main() {
+  const scheduler = schedule.scheduleJob("*/10 * * * *", scrapeLiveStreams);
+
+  console.log("Vespa Scheduler has been started:", scheduler.name);
+
+  await scrapeLiveStreams(new Date());
+}
+
+main().catch(async (err) => {
+  console.log(err);
+
+  // Queue#close is idempotent - no need to guard against duplicate calls.
+  try {
+    await queue.close(TIMEOUT);
+  } catch (err) {
+    console.error("bee-queue failed to shut down gracefully", err);
+  }
+
+  process.exit(1);
+});
 
 process.on("uncaughtException", async () => {
   // Queue#close is idempotent - no need to guard against duplicate calls.
@@ -146,5 +163,6 @@ process.on("uncaughtException", async () => {
   } catch (err) {
     console.error("bee-queue failed to shut down gracefully", err);
   }
+
   process.exit(1);
 });

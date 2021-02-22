@@ -1,0 +1,2 @@
+- [How To Use Terraform with DigitalOcean | DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-use-terraform-with-digitalocean)
+- [Docs overview | digitalocean/digitalocean | Terraform Registry](https://registry.terraform.io/providers/digitalocean/digitalocean/latest/docs)

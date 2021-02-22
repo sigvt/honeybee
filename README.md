@@ -1,31 +1,28 @@
 # honeybee
 
-```bash
-NODE_OPTIONS=--max-old-space-size=32768 ts-node src/cli.ts
-```
-
-## Configure
-
-### Start scheduler and datastore
+## Create honeybee cluster
 
 ```bash
-docker stack deploy -c docker-compose.production.yml
-```
+cp .env.placeholder .env
+vim .env
 
-### Add worker
+docker swarm init --advertise-addr $(curl -s https://ifconfig.co)
+docker network create -d overlay --attachable honeybee
+docker stack deploy -c cluster.yml honeybee
+```
 
 ```bash
 # in master node
-docker-compose exec db mongo -u vespa -p
+docker exec -it honeybee_mongo.1.<task_id> mongo -u honeybee
 ```
 
 ```js
-use vespa
+use honeybee
 
 db.createUser({
   user: "worker",
   pwd: passwordPrompt(), // or cleartext password
-  roles: [{ role: "readWrite", db: "vespa" }],
+  roles: [{ role: "readWrite", db: "honeybee" }],
 });
 ```
 
@@ -37,34 +34,34 @@ authenticationRestrictions: [
 ];
 ```
 
-```bash
-# in worklet
-cat <secret> | docker login pkg.uechi.io --username <user> --password-stdin
-docker run \
-  -e JOB_CONCURRENCY=100 \
-  -e MONGO_URI=mongodb://<user>:<pwd>@<host>:<port>/<db> \
-  -e REDIS_URI=redis://<user>:<password>@<host>:<port> \
-  --name vespa-worker \
-  --restart unless-stopped \
-  -d \
-  pkg.uechi.io/vespa-honeybee
-```
-
-### Remove worker
+## Show cluster health
 
 ```bash
-# in worklet
-docker rm vespa-worker
+make stats
 ```
 
-```js
-use vespa
-db.dropUser("worker-tokyo1")
-show users
-```
-
-## Show stats
+## Deploy additional nodes
 
 ```bash
-docker-compose exec worker node lib/cli.js stats
+cd tf
+terraform init
+terraform apply
 ```
+
+### Teardown nodes
+
+```bash
+cd tf
+terraform destroy
+```
+
+## Running migration task
+
+```bash
+NODE_OPTIONS=--max-old-space-size=32768 ts-node src/cli.ts --help
+```
+
+## References
+
+- [docker-compose for Swarm: docker stack - Dots and Brackets: Code Blog](https://codeblog.dotsandbrackets.com/docker-stack/)
+- [Deploy a stack to a swarm | Docker Documentation](https://docs.docker.com/engine/swarm/stack-deploy/)

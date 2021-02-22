@@ -91,6 +91,15 @@ async function showClusterStats() {
   const disconnect = await initMongo();
   const queue = getQueueInstance({ isWorker: false });
 
+  process.on("SIGINT", async () => {
+    console.log("Caught interrupt signal");
+
+    await queue.close();
+    await disconnect();
+
+    process.exit(0);
+  });
+
   const REFRESH_INTERVAL = 10;
 
   const col = new DeltaCollection(80);
@@ -112,7 +121,7 @@ async function showClusterStats() {
 
     outputBuffer.addLine(
       new Line()
-        .column(`vespa cluster health [interval=${REFRESH_INTERVAL}s]`, 60, [
+        .column(`honeybee cluster health [interval=${REFRESH_INTERVAL}s]`, 60, [
           clc.yellow,
         ])
         .fill()
@@ -294,7 +303,7 @@ async function migrateJsonl(argv: any) {
 }
 
 yargs(process.argv.slice(2))
-  .scriptName("vespa")
+  .scriptName("honeybee")
   .command("stats", "show cluster health", showClusterStats)
   .command(
     "inspect <videoId>",
