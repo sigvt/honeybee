@@ -21,15 +21,18 @@ docker-compose exec db mongo -u vespa -p
 use vespa
 
 db.createUser({
-  user: "worker-tokyo1",
+  user: "worker",
   pwd: passwordPrompt(), // or cleartext password
   roles: [{ role: "readWrite", db: "vespa" }],
-  authenticationRestrictions: [
-    {
-      clientSource: ["<ip|cidr>"]
-    }
-  ]
 });
+```
+
+```js
+authenticationRestrictions: [
+  {
+    clientSource: ["<ip|cidr>"],
+  },
+];
 ```
 
 ```bash
