@@ -7,7 +7,7 @@ export async function fetchLiveStreams(): Promise<HolodexLiveStreamInfo[]> {
     {
       method: "GET",
       headers: {
-        "user-agent": "Vespa",
+        "user-agent": "honeybee",
       },
     }
   ).then((res) => res.json())) as HolodexLiveStreamInfo[];

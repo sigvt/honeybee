@@ -14,10 +14,10 @@ resource "digitalocean_droplet" "node" {
   image  = "docker-20-04"
   region = "sfo3"
   count  = 1
-  name   = format("vespa-worker-%02d.%s", count.index + 1, var.region)
+  name   = format("honeybee-worker-%02d.%s", count.index + 1, var.region)
   size   = "s-1vcpu-1gb"
   tags = [
-    "vespa"
+    "honeybee"
   ]
 
   ssh_keys = var.ssh_keys

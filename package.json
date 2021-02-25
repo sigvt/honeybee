@@ -1,19 +1,20 @@
 {
-  "name": "workerbee",
-  "description": "workerbee",
+  "name": "honeybee",
+  "description": "honeybee",
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && shx chmod +x lib/cli.js",
     "clean": "shx rm -rf lib",
     "dev": "tsc -w",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "jest"
   },
   "types": "lib/index.d.ts",
-  "main": "index.js",
+  "main": "lib/index.js",
   "bin": {
-    "workerbee": "lib/cli.js"
+    "honeybee": "lib/cli.js",
+    "hb": "lib/cli.js"
   },
   "files": [
     "lib"
@@ -28,7 +29,7 @@
     "mongoose": "5.10.18",
     "node-fetch": "^2.6.1",
     "node-schedule": "^2.0.0",
-    "pm2": "^4.5.4",
+    "redis": "^3.0.2",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
@@ -47,13 +48,12 @@
     "shx": "^0.3.3",
     "ts-jest": "^26.5.1",
     "ts-node": "^9.1.1",
-    "tsup": "^4.0.0",
     "typescript": "^4.1.5"
   },
-  "homepage": "https://github.com/uetchy/vespa",
+  "homepage": "https://github.com/uetchy/honeybee",
   "repository": {
     "type": "git",
-    "url": "https://github.com/uetchy/vespa.git"
+    "url": "https://github.com/uetchy/honeybee.git"
   },
   "bugs": {
     "url": "https://github.com/uetchy/vespa/issues"

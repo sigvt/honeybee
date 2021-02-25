@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import clc from "cli-color";
 import { Line, LineBuffer, Sparkline } from "clui";
 import fs from "fs";
@@ -8,11 +10,18 @@ import BanAction from "./models/BanAction";
 import Chat from "./models/Chat";
 import DeleteAction from "./models/DeleteAction";
 import { getQueueInstance } from "./queue";
+import { runScheduler } from "./scheduler";
 import { Action, ReloadContinuationType } from "./types/chat";
 import { DeltaCollection, normalizeVideoId, timeoutThen } from "./util";
+import { runWorker } from "./worker";
 import { iterateChat } from "./youtube/chat";
 import { fetchContext } from "./youtube/context";
 import { toSimpleChat } from "./youtube/util";
+
+type ActionWithOrigin = Action & {
+  originVideoId: string;
+  originChannelId: string;
+};
 
 async function inspectChat(argv: any) {
   const id = normalizeVideoId(argv.videoId);
@@ -87,16 +96,13 @@ async function inspectChat(argv: any) {
   process.exit(0);
 }
 
-async function showClusterStats() {
+async function showClusterHealth() {
   const disconnect = await initMongo();
   const queue = getQueueInstance({ isWorker: false });
 
   process.on("SIGINT", async () => {
-    console.log("Caught interrupt signal");
-
     await queue.close();
     await disconnect();
-
     process.exit(0);
   });
 
@@ -189,29 +195,6 @@ async function showClusterStats() {
 
     await timeoutThen(REFRESH_INTERVAL * 1000);
   }
-
-  await disconnect();
-  await queue.close();
-}
-
-type ActionWithOrigin = Action & {
-  originVideoId: string;
-  originChannelId: string;
-};
-
-async function normalizeRawMessage(argv: any) {
-  const disconnect = await initMongo();
-
-  for await (const doc of Chat.find()) {
-    if (!doc.rawMessage) continue;
-    if (doc.rawMessage[0] && "runs" in doc.rawMessage[0]) {
-      doc.rawMessage = (doc.rawMessage[0] as any).runs;
-      await doc.save();
-      process.stdout.write(".");
-    }
-  }
-
-  await disconnect();
 }
 
 async function removeDuplicatedActions(argv: any) {
@@ -235,6 +218,7 @@ async function removeDuplicatedActions(argv: any) {
     console.log(records);
     // process.exit(0);
   }
+
   await disconnect();
 }
 
@@ -304,7 +288,6 @@ async function migrateJsonl(argv: any) {
 
 yargs(process.argv.slice(2))
   .scriptName("honeybee")
-  .command("stats", "show cluster health", showClusterStats)
   .command(
     "inspect <videoId>",
     "inspect the live chat messages",
@@ -314,6 +297,12 @@ yargs(process.argv.slice(2))
       });
     },
     inspectChat
+  )
+  .command("health", "show cluster health", showClusterHealth)
+  .command(
+    "removeDuplicatedActions",
+    "remove duplicated actions",
+    removeDuplicatedActions
   )
   .command(
     "migrateJsonl <input>",
@@ -325,5 +314,6 @@ yargs(process.argv.slice(2))
     },
     migrateJsonl
   )
-  .command("normalizeRawMessage", "normalizee rawMessage", normalizeRawMessage)
+  .command("scheduler", "start scheduler", runScheduler)
+  .command("worker", "start worker", runWorker)
   .demandCommand(1).argv;

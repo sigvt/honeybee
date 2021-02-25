@@ -20,7 +20,7 @@ export async function fetchLiveStreams({
     {
       method: "GET",
       headers: {
-        "user-agent": "Vespa",
+        "user-agent": "honeybee",
       },
     }
   ).then((res) => res.json())) as HolotoolsLiveStreamsResponse;

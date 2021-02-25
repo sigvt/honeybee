@@ -7,5 +7,6 @@ RUN yarn --frozen-lockfile
 COPY src /app/src
 COPY tsconfig.json /app/
 RUN yarn build
+RUN yarn link
 
-CMD ["node", "./lib/worker.js"]
+CMD ["honeybee", "worker"]

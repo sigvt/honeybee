@@ -58,7 +58,7 @@ terraform destroy
 ## Running migration task
 
 ```bash
-NODE_OPTIONS=--max-old-space-size=32768 ts-node src/cli.ts --help
+NODE_OPTIONS=--max-old-space-size=32768 honeybee --help
 ```
 
 ## References

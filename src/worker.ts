@@ -135,7 +135,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 }
 
 // collect live chat and save to mongodb
-async function main() {
+export async function runWorker() {
   const disconnectFromMongo = await initMongo();
   const queue = getQueueInstance({ activateDelayedJobs: true });
 
@@ -166,8 +166,3 @@ async function main() {
     process.exit(1);
   });
 }
-
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});

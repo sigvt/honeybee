@@ -18,7 +18,7 @@ services:
   scheduler:
     build: .
     image: ${HONEYBEE_IMAGE}
-    command: node ./lib/scheduler.js
+    command: honeybee scheduler
     environment:
       REDIS_URI: redis://redis
     depends_on:
