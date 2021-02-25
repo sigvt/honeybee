@@ -1,6 +1,6 @@
 # honeybee
 
-## Create honeybee cluster
+## Fire up cluster
 
 ```bash
 cp .env.placeholder .env
@@ -40,7 +40,7 @@ authenticationRestrictions: [
 make stats
 ```
 
-## Deploy additional nodes
+## Deploy additional worker nodes
 
 ```bash
 cd tf
@@ -48,7 +48,7 @@ terraform init
 terraform apply
 ```
 
-### Teardown nodes
+### Teardown workers
 
 ```bash
 cd tf
@@ -60,8 +60,3 @@ terraform destroy
 ```bash
 NODE_OPTIONS=--max-old-space-size=32768 honeybee --help
 ```
-
-## References
-
-- [docker-compose for Swarm: docker stack - Dots and Brackets: Code Blog](https://codeblog.dotsandbrackets.com/docker-stack/)
-- [Deploy a stack to a swarm | Docker Documentation](https://docs.docker.com/engine/swarm/stack-deploy/)
