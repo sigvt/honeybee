@@ -12,11 +12,11 @@ stop:
 deploy:
 	docker stack deploy -c cluster.yml --with-registry-auth vespa
 
-ps:
-	docker stack ps vespa
-
 logs:
 	docker service logs -f vespa_worker
 
-stats:
+ps:
+	docker stack ps vespa
+
+health:
 	docker run --rm --network vespa -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/vespa -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis ${HONEYBEE_IMAGE} honeybee health

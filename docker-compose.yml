@@ -29,7 +29,7 @@ services:
     environment:
       REDIS_URI: redis://redis
       MONGO_URI: mongodb://db/vespa
-      JOB_CONCURRENCY: 10
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-1}
     depends_on:
       - redis
       - db
