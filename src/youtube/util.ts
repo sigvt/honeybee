@@ -18,7 +18,7 @@ export function convertRunsToString(runs: Run[]): string {
       .join("");
   } catch (err) {
     log(err, runs);
-    return "failed to render";
+    throw new Error("failed to render runs into string");
   }
 }
 
