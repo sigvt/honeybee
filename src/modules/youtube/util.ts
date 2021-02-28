@@ -1,6 +1,6 @@
 import chalk from "chalk";
-import { Action, Run } from "../types/chat";
-import { log } from "../util";
+import { Action, Run } from "./types/chat";
+import { log } from "../../util";
 
 export function convertRunsToString(runs: Run[]): string {
   try {

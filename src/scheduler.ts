@@ -1,11 +1,11 @@
 import schedule from "node-schedule";
-import { fetchLiveStreams } from "./holodex";
-import { getQueueInstance } from "./queue";
-import { HolodexLiveStreamInfo } from "./types/holodex";
-import { ErrorCode, Result } from "./types/job";
+import { fetchLiveStreams } from "./modules/holodex";
+import { HolodexLiveStreamInfo } from "./modules/holodex/types";
+import { ErrorCode, getQueueInstance, Result } from "./modules/queue";
 
 const TIMEOUT = 30 * 1000;
 const IGNORE_FREE_CHAT = false;
+const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
 
 function guessFreeChat(title: string) {
   return (
@@ -59,7 +59,7 @@ export async function runScheduler() {
   }
 
   // watch channel and add newly created live stream to redis queue
-  async function scrapeLiveStreams(invokedAt: Date) {
+  async function rearrange(invokedAt: Date) {
     console.log("FETCH INDEX", invokedAt);
 
     await queue.checkStalledJobs();
@@ -72,7 +72,8 @@ export async function runScheduler() {
       await handleStream(stream);
     }
 
-    console.log("HEALTH", await queue.checkHealth());
+    const health = await queue.checkHealth();
+    console.log("HEALTH", health);
 
     for (const [id, job] of queue.jobs) {
       console.log(
@@ -81,6 +82,12 @@ export async function runScheduler() {
         job.data.stream.channel.name
       );
     }
+
+    // TODO: auto scale worker nodes
+    const totalJobs = health.active + health.delayed + health.waiting;
+    const totalWorkers = Math.ceil(totalJobs / JOB_CONCURRENCY);
+    // terraform apply -var total_workers=${totalWorkers}
+    console.log(`SUGGESTED WORKER COUNT: ${totalWorkers}`);
   }
 
   queue.on("ready", () => {
@@ -144,7 +151,7 @@ export async function runScheduler() {
     );
   });
 
-  const scheduler = schedule.scheduleJob("*/10 * * * *", scrapeLiveStreams);
+  const scheduler = schedule.scheduleJob("*/10 * * * *", rearrange);
 
   console.log("Honeybee Scheduler has been started:", scheduler.name);
 }

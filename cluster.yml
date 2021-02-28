@@ -28,6 +28,7 @@ services:
     command: honeybee scheduler
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY}
     depends_on:
       - redis
     deploy:

@@ -45,7 +45,7 @@ make stats
 ```bash
 cd tf
 terraform init
-terraform apply
+terraform apply -var total_workers=5
 ```
 
 ### Teardown workers
@@ -55,7 +55,7 @@ cd tf
 terraform destroy
 ```
 
-## Running migration task
+## Running task
 
 ```bash
 NODE_OPTIONS=--max-old-space-size=32768 honeybee --help

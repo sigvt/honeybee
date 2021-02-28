@@ -4,7 +4,7 @@ import {
   prop,
   Severity,
 } from "@typegoose/typegoose";
-import { Run } from "../types/chat";
+import { Run } from "../modules/youtube/types/chat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class Chat {

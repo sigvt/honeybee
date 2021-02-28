@@ -1,8 +1,5 @@
 import fetch from "node-fetch";
-import {
-  HolotoolsLiveStreamsResponse,
-  HolotoolsLiveStreamInfo,
-} from "../types/holotools";
+import { HolotoolsLiveStreamsResponse, HolotoolsLiveStreamInfo } from "./types";
 
 export interface FetchLiveStreamsOptions {
   maxUpcomingHours?: number;

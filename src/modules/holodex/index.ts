@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { HolodexLiveStreamInfo } from "../types/holodex";
+import { HolodexLiveStreamInfo } from "./types";
 
 export async function fetchLiveStreams(): Promise<HolodexLiveStreamInfo[]> {
   const response = (await fetch(

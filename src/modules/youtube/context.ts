@@ -4,8 +4,8 @@ import {
   ReloadContinuationItems,
   ReloadContinuationType,
   TimedContinuationData,
-} from "../types/chat";
-import { ContextConfig, InitialData, WebPlayerContext } from "../types/context";
+} from "./types/chat";
+import { ContextConfig, InitialData, WebPlayerContext } from "./types/context";
 import { convertRunsToString } from "./util";
 
 export interface Context {

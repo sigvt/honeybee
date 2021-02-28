@@ -10,8 +10,8 @@ import {
   RawChatResponse,
   RawContinuationContents,
   TimedContinuation,
-} from "../types/chat";
-import { appendJSON, log } from "../util";
+} from "./types/chat";
+import { appendJSON, log } from "../../util";
 import { Client } from "./context";
 
 export function getContinuation(

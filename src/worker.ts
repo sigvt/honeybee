@@ -1,14 +1,19 @@
 import BeeQueue from "bee-queue";
-import { initMongo } from "./db";
 import BanAction from "./models/BanAction";
 import Chat from "./models/Chat";
 import DeleteAction from "./models/DeleteAction";
-import { getQueueInstance } from "./queue";
-import { Action, ReloadContinuationType } from "./types/chat";
-import { ErrorCode, Job, Result, Stats } from "./types/job";
+import { initMongo } from "./modules/db";
+import {
+  ErrorCode,
+  getQueueInstance,
+  Job,
+  Result,
+  Stats,
+} from "./modules/queue";
+import { iterateChat } from "./modules/youtube/chat";
+import { fetchContext } from "./modules/youtube/context";
+import { Action, ReloadContinuationType } from "./modules/youtube/types/chat";
 import { groupBy } from "./util";
-import { iterateChat } from "./youtube/chat";
-import { fetchContext } from "./youtube/context";
 
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
 
