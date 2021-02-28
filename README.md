@@ -26,18 +26,10 @@ db.createUser({
 });
 ```
 
-```js
-authenticationRestrictions: [
-  {
-    clientSource: ["<ip|cidr>"],
-  },
-];
-```
-
 ## Show cluster health
 
 ```bash
-make stats
+make health
 ```
 
 ## Deploy additional worker nodes
@@ -58,5 +50,10 @@ terraform destroy
 ## Running task
 
 ```bash
-NODE_OPTIONS=--max-old-space-size=32768 honeybee --help
+docker run --rm --network honeybee -it \
+  -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/honeybee \
+  -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis \
+  -e NODE_OPTIONS=--max-old-space-size=32768 \
+  ${HONEYBEE_IMAGE} \
+  honeybee --help
 ```
