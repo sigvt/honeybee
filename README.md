@@ -1,4 +1,4 @@
-# 🍯🐝 Honeybee
+# 🍯🐝 honeybee
 
 ![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header.png)
 
@@ -49,7 +49,7 @@ cd tf
 terraform destroy
 ```
 
-## Running task
+## Run one-shot task
 
 ```bash
 docker run --rm --network honeybee -it \
