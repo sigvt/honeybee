@@ -1,6 +1,8 @@
-# honeybee
+# 🍯🐝 Honeybee
 
-## Fire up cluster
+![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header.png)
+
+## Spin up a cluster
 
 ```bash
 cp .env.placeholder .env
