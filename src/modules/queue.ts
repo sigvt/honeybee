@@ -26,7 +26,7 @@ export interface Stats {
 }
 
 // feature flags
-const QUEUE_NAME = "vespa-collector";
+const QUEUE_NAME = "honeybee";
 const REDIS_URI = process.env.REDIS_URI;
 
 export function getQueueInstance(args: any = {}) {

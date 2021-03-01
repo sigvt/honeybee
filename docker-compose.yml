@@ -28,7 +28,7 @@ services:
     image: ${HONEYBEE_IMAGE}
     environment:
       REDIS_URI: redis://redis
-      MONGO_URI: mongodb://db/vespa
+      MONGO_URI: mongodb://db/honeybee
       JOB_CONCURRENCY: ${JOB_CONCURRENCY:-1}
     depends_on:
       - redis

@@ -10,12 +10,12 @@ vim .env
 
 docker swarm init --advertise-addr $(curl -s https://ifconfig.co)
 docker network create -d overlay --attachable honeybee
-docker stack deploy -c cluster.yml honeybee
+docker stack deploy -c cluster.yml hb
 ```
 
 ```bash
 # in master node
-docker exec -it honeybee_mongo.1.<task_id> mongo -u honeybee
+docker exec -it hb_mongo.1.<task_id> mongo -u honeybee
 ```
 
 ```js

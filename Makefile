@@ -7,16 +7,16 @@ push:
 	docker-compose push
 
 stop:
-	docker stack rm vespa
+	docker stack rm hb
 
 deploy:
-	docker stack deploy -c cluster.yml --with-registry-auth vespa
+	docker stack deploy -c cluster.yml --with-registry-auth hb
 
 logs:
-	concurrently --names "SCHEDULER,WORKER" "docker service logs -f vespa_scheduler" "docker service logs -f vespa_worker"
+	concurrently --names "SCHEDULER,WORKER" "docker service logs -f hb_scheduler" "docker service logs -f hb_worker"
 
 ps:
-	docker stack ps vespa
+	docker stack ps hb
 
 health:
-	docker run --rm --network vespa -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/vespa -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis ${HONEYBEE_IMAGE} honeybee health
+	docker run --rm --network honeybee -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/vespa -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis ${HONEYBEE_IMAGE} honeybee health

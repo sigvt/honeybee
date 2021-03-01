@@ -57,11 +57,11 @@
     "url": "https://github.com/uetchy/honeybee.git"
   },
   "bugs": {
-    "url": "https://github.com/uetchy/vespa/issues"
+    "url": "https://github.com/uetchy/honeybee/issues"
   },
   "license": "AGPL-3.0",
   "keywords": [
-    "vespa"
+    "honeybee"
   ],
   "engines": {
     "node": ">= 12.18.3"

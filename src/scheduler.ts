@@ -3,7 +3,7 @@ import { fetchLiveStreams } from "./modules/holodex";
 import { HolodexLiveStreamInfo } from "./modules/holodex/types";
 import { ErrorCode, getQueueInstance, Result } from "./modules/queue";
 
-const TIMEOUT = 30 * 1000;
+const SHUTDOWN_TIMEOUT = 30 * 1000;
 const IGNORE_FREE_CHAT = false;
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
 
@@ -21,74 +21,12 @@ export async function runScheduler() {
   process.on("SIGTERM", async () => {
     // Queue#close is idempotent - no need to guard against duplicate calls.
     try {
-      await queue.close(TIMEOUT);
+      await queue.close(SHUTDOWN_TIMEOUT);
     } catch (err) {
       console.error("bee-queue failed to shut down gracefully", err);
     }
+    process.exit(1);
   });
-
-  async function handleStream(stream: HolodexLiveStreamInfo) {
-    const videoId = stream.id;
-
-    if (handledVideoIdCache.has(videoId)) return;
-
-    // filter out freechat
-    if (guessFreeChat(stream.title)) return;
-
-    const startUntil = stream.start_scheduled
-      ? new Date(stream.start_scheduled).getTime() - Date.now()
-      : 0;
-
-    // if failed to receive chat:
-    // prechat -> retry after max(1m, 1/3 of startUntil) for 3 times
-    // livechat -> retry after 5m for 3 times
-    const job = await queue
-      .createJob({ videoId, stream })
-      .setId(videoId)
-      .retries(3)
-      .backoff("fixed", Math.max(Math.floor(startUntil / 3), 5 * 60 * 1000))
-      .save();
-
-    console.log(
-      `Scheduled job for ${videoId} (${stream.title}) with worker ${
-        job.id
-      } (starts in ${Math.floor(startUntil / 1000 / 60)} minutes)`
-    );
-
-    handledVideoIdCache.add(videoId);
-  }
-
-  // watch channel and add newly created live stream to redis queue
-  async function rearrange(invokedAt: Date) {
-    console.log("FETCH INDEX", invokedAt);
-
-    await queue.checkStalledJobs();
-
-    const liveAndUpcomingStreams = await fetchLiveStreams();
-
-    if (liveAndUpcomingStreams.length === 0) return;
-
-    for (const stream of liveAndUpcomingStreams) {
-      await handleStream(stream);
-    }
-
-    const health = await queue.checkHealth();
-    console.log("HEALTH", health);
-
-    for (const [id, job] of queue.jobs) {
-      console.log(
-        `${job.status}(${id})`,
-        job.progress,
-        job.data.stream.channel.name
-      );
-    }
-
-    // TODO: auto scale worker nodes
-    const totalJobs = health.active + health.delayed + health.waiting;
-    const totalWorkers = Math.ceil(totalJobs / JOB_CONCURRENCY);
-    // terraform apply -var total_workers=${totalWorkers}
-    console.log(`SUGGESTED WORKER COUNT: ${totalWorkers}`);
-  }
 
   queue.on("ready", () => {
     console.log("SCHEDULER READY");
@@ -151,7 +89,71 @@ export async function runScheduler() {
     );
   });
 
+  async function handleStream(stream: HolodexLiveStreamInfo) {
+    const videoId = stream.id;
+
+    if (handledVideoIdCache.has(videoId)) return;
+
+    // filter out freechat
+    if (guessFreeChat(stream.title)) return;
+
+    const startUntil = stream.start_scheduled
+      ? new Date(stream.start_scheduled).getTime() - Date.now()
+      : 0;
+
+    // if failed to receive chat:
+    // prechat -> retry after max(1m, 1/3 of startUntil) for 3 times
+    // livechat -> retry after 5m for 3 times
+    const job = await queue
+      .createJob({ videoId, stream })
+      .setId(videoId)
+      .retries(3)
+      .backoff("fixed", Math.max(Math.floor(startUntil / 3), 5 * 60 * 1000))
+      .save();
+
+    console.log(
+      `Scheduled job for ${videoId} (${stream.title}) with worker ${
+        job.id
+      } (starts in ${Math.floor(startUntil / 1000 / 60)} minutes)`
+    );
+
+    handledVideoIdCache.add(videoId);
+  }
+
+  async function rearrange(invokedAt: Date) {
+    console.log("FETCH INDEX", invokedAt);
+
+    await queue.checkStalledJobs();
+
+    const liveAndUpcomingStreams = await fetchLiveStreams();
+
+    if (liveAndUpcomingStreams.length === 0) return;
+
+    for (const stream of liveAndUpcomingStreams) {
+      await handleStream(stream);
+    }
+
+    const health = await queue.checkHealth();
+    console.log("HEALTH", health);
+
+    for (const [id, job] of queue.jobs) {
+      console.log(
+        `${job.status}(${id})`,
+        job.progress,
+        job.data.stream.channel.name
+      );
+    }
+
+    // TODO: auto scale worker nodes
+    const totalJobs = health.active + health.delayed + health.waiting;
+    const totalWorkers = Math.ceil(totalJobs / JOB_CONCURRENCY);
+    // terraform apply -var total_workers=${totalWorkers}
+    console.log(`SUGGESTED WORKER COUNT: ${totalWorkers}`);
+  }
+
   const scheduler = schedule.scheduleJob("*/10 * * * *", rearrange);
 
   console.log("Honeybee Scheduler has been started:", scheduler.name);
+
+  await rearrange(new Date());
 }
