@@ -1,7 +1,7 @@
 all: build push deploy ps
 
 build:
-	docker-compose build
+	docker-compose build --pull
 
 push:
 	docker-compose push
@@ -13,7 +13,7 @@ deploy:
 	docker stack deploy -c cluster.yml --with-registry-auth vespa
 
 logs:
-	docker service logs -f vespa_worker
+	concurrently --names "SCHEDULER,WORKER" "docker service logs -f vespa_scheduler" "docker service logs -f vespa_worker"
 
 ps:
 	docker stack ps vespa
