@@ -2,14 +2,14 @@ version: "3.2"
 
 services:
   db:
-    image: mongo:latest
+    image: mongo:4
     ports:
       - "27017:27017"
     volumes:
       - ./data/mongo:/data/db
 
   redis:
-    image: redis:latest
+    image: redis:6-alpine
     ports:
       - "6379:6379"
     volumes:
