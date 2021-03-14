@@ -2,19 +2,21 @@ version: "3.9"
 
 services:
   mongo:
-    image: mongo:latest
+    image: mongo:4
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
       - ${DATA_DIR:-./data}/mongo:/data/db
+    ports:
+      - "27017:27017"
     deploy:
       replicas: 1
       placement:
         constraints: [node.role == manager]
 
   redis:
-    image: redis:latest
+    image: redis:6-alpine
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - ${DATA_DIR:-./data}/redis:/data
