@@ -12,6 +12,34 @@ LiveChat API = https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=<
 .continuationContents.liveChatContinuation.header.liveChatHeaderRenderer.viewSelector.sortFilterSubMenuRenderer.subMenuItems[].continuation.reloadContinuationData
 ```
 
+## custom emojis
+
+```json
+{
+  "emoji": {
+    "emojiId": "UCl_gCybOJRIgOXw6Qb4qJzQ/fAlGX-fwIMOf-gOkv4awAQ",
+    "shortcuts": [":_どんっ:", ":どんっ:"],
+    "searchTerms": ["_どんっ", "どんっ"],
+    "image": {
+      "thumbnails": [
+        {
+          "url": "https://yt3.ggpht.com/gswO_3qhpixDRwBdyzXAIptM_Q52F6kQj44OZHwZCTJPcO4pUFABjhvxMw9RhHWGGdYt7j_6JzI=w24-h24-c-k-nd",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "url": "https://yt3.ggpht.com/gswO_3qhpixDRwBdyzXAIptM_Q52F6kQj44OZHwZCTJPcO4pUFABjhvxMw9RhHWGGdYt7j_6JzI=w48-h48-c-k-nd",
+          "width": 48,
+          "height": 48
+        }
+      ],
+      "accessibility": { "accessibilityData": { "label": "どんっ" } }
+    },
+    "isCustomEmoji": True
+  }
+}
+```
+
 ## authorBadges
 
 - Membership `customThumbnail`
