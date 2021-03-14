@@ -14,6 +14,8 @@ services:
       replicas: 1
       placement:
         constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
 
   redis:
     image: redis:6-alpine
@@ -24,6 +26,8 @@ services:
       replicas: 1
       placement:
         constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
 
   scheduler:
     image: ${HONEYBEE_IMAGE}

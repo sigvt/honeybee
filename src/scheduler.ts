@@ -18,6 +18,10 @@ export async function runScheduler() {
   const queue = getQueueInstance({ isWorker: false });
   const handledVideoIdCache: Set<string> = new Set();
 
+  process.on("unhandledRejection", () => {
+    process.exit(1);
+  });
+
   process.on("SIGTERM", async () => {
     // Queue#close is idempotent - no need to guard against duplicate calls.
     try {
