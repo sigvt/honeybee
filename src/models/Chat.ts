@@ -4,7 +4,7 @@ import {
   prop,
   Severity,
 } from "@typegoose/typegoose";
-import { Run } from "../modules/youtube/types/chat";
+import { Membership, Purchase, Run } from "../modules/youtube/types/chat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class Chat {
@@ -13,6 +13,12 @@ class Chat {
 
   @prop({ allowMixed: true })
   public rawMessage?: Run[];
+
+  @prop({ allowMixed: true })
+  public purchase?: Purchase;
+
+  @prop({ allowMixed: true })
+  public membership?: Membership;
 
   @prop()
   public authorName?: String;
