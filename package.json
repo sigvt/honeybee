@@ -59,7 +59,7 @@
   "bugs": {
     "url": "https://github.com/uetchy/honeybee/issues"
   },
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "keywords": [
     "honeybee"
   ],

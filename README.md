@@ -8,7 +8,7 @@
 cp .env.placeholder .env
 vim .env
 
-docker swarm init --advertise-addr $(curl -s https://ifconfig.co)
+docker swarm init --advertise-addr $(curl -s https://ifconfig.co/ip)
 docker network create -d overlay --attachable honeybee
 docker stack deploy -c cluster.yml hb
 ```
