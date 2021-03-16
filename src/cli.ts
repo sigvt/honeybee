@@ -8,6 +8,10 @@ import { showClusterHealth } from "./commands/showClusterHealth";
 import { runScheduler } from "./scheduler";
 import { runWorker } from "./worker";
 
+process.on("unhandledRejection", () => {
+  process.exit(1);
+});
+
 yargs(process.argv.slice(2))
   .scriptName("honeybee")
   .command(

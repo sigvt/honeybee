@@ -2,25 +2,15 @@ import schedule from "node-schedule";
 import { fetchLiveStreams } from "./modules/holodex";
 import { HolodexLiveStreamInfo } from "./modules/holodex/types";
 import { ErrorCode, getQueueInstance, Result } from "./modules/queue";
+import { guessFreeChat } from "./util";
 
 const SHUTDOWN_TIMEOUT = 30 * 1000;
 const IGNORE_FREE_CHAT = false;
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
 
-function guessFreeChat(title: string) {
-  return (
-    IGNORE_FREE_CHAT &&
-    /(?:[fF]ree\s?[cC]hat|(?:ふりー|フリー)(?:ちゃっと|チャット))/.test(title)
-  );
-}
-
 export async function runScheduler() {
   const queue = getQueueInstance({ isWorker: false });
   const handledVideoIdCache: Set<string> = new Set();
-
-  process.on("unhandledRejection", () => {
-    process.exit(1);
-  });
 
   process.on("SIGTERM", async () => {
     // Queue#close is idempotent - no need to guard against duplicate calls.
@@ -99,7 +89,7 @@ export async function runScheduler() {
     if (handledVideoIdCache.has(videoId)) return;
 
     // filter out freechat
-    if (guessFreeChat(stream.title)) return;
+    if (IGNORE_FREE_CHAT && guessFreeChat(stream.title)) return;
 
     const startUntil = stream.start_scheduled
       ? new Date(stream.start_scheduled).getTime() - Date.now()

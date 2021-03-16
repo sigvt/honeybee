@@ -92,7 +92,7 @@ function parseChatAction(action: RawAction): Action | undefined {
       if ("purchaseAmountText" in renderer) {
         const AMOUNT_REGEXP = /[\d.,]+/;
         const input = renderer.purchaseAmountText.simpleText;
-        const amountString = AMOUNT_REGEXP.exec(input)![0];
+        const amountString = AMOUNT_REGEXP.exec(input)![0].replace(/,/g, "");
         const curency = input.replace(AMOUNT_REGEXP, "").trim();
         raw.purchase = {
           amount: parseInt(amountString, 10),

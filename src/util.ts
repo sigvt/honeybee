@@ -18,6 +18,12 @@ export function debug(obj: any) {
   console.log(JSON.stringify(obj, null, 2));
 }
 
+export function guessFreeChat(title: string) {
+  return /(?:[fF]ree\s?[cC]hat|(?:ふりー|フリー)(?:ちゃっと|チャット))/.test(
+    title
+  );
+}
+
 export function saveJSON(filename: string, obj: any) {
   writeFileSync(join(process.cwd(), filename), JSON.stringify(obj, null, 2));
 }
