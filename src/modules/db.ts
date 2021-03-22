@@ -11,5 +11,6 @@ export async function initMongo() {
     useUnifiedTopology: true,
     useCreateIndex: true,
   });
+
   return () => mongoose.disconnect();
 }

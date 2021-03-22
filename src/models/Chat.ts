@@ -9,7 +9,7 @@ import { Membership, Purchase, Run } from "../modules/youtube/types/chat";
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class Chat {
   @prop({ required: true, unique: true })
-  public id!: String;
+  public id!: string;
 
   @prop({ allowMixed: true })
   public rawMessage?: Run[];
@@ -21,13 +21,13 @@ class Chat {
   public membership?: Membership;
 
   @prop()
-  public authorName?: String;
+  public authorName?: string;
 
   @prop({ required: true })
-  public authorChannelId!: String;
+  public authorChannelId!: string;
 
   @prop({ required: true })
-  public authorPhoto!: String;
+  public authorPhoto!: string;
 
   @prop({ required: true })
   public isVerified!: Boolean;
@@ -39,13 +39,16 @@ class Chat {
   public isModerator!: Boolean;
 
   @prop({ required: true })
-  public originVideoId!: String;
+  public originVideoId!: string;
 
   @prop({ required: true })
-  public originChannelId!: String;
+  public originChannelId!: string;
 
-  @prop({ required: true })
-  public timestampUsec!: String;
+  @prop({ required: true, index: true })
+  public timestamp?: Date;
+
+  @prop()
+  public timestampUsec?: string;
 }
 
 export default getModelForClass(Chat);

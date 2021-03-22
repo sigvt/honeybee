@@ -48,7 +48,7 @@ services:
     image: ${HONEYBEE_IMAGE}
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
-      MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/vespa
+      MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/${MONGO_DATABASE}
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
     depends_on:
       - redis

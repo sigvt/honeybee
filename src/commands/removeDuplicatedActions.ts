@@ -15,13 +15,19 @@ export async function removeDuplicatedActions(argv: any) {
     { $match: { count: { $gt: 1 } } },
     { $sort: { count: -1 } },
   ]);
-  for (const agg of aggregate) {
+
+  let nbRemoved = 0;
+  for (const res of aggregate) {
     const records = await BanAction.where("_id")
-      .in(agg.uniqueIds)
-      .select(["timestampUsec"]);
-    console.log(records);
-    // process.exit(0);
+      .in(res.uniqueIds)
+      .select(["_id"]);
+
+    const toRemove = records.slice(1);
+    nbRemoved += toRemove.length;
+    // await BanAction.deleteMany(records.slice(1));
   }
+
+  console.log(`removed`, nbRemoved);
 
   await disconnect();
 }

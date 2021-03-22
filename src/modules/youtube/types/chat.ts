@@ -34,6 +34,7 @@ export type Action =
 export interface ChatAdditionAction {
   type: "addChatItemAction";
   id: string;
+  timestamp: Date;
   timestampUsec: string;
   rawMessage?: Run[];
   authorName?: string;
@@ -64,14 +65,14 @@ export interface Purchase {
 export interface ChatByAuthorDeletionAction {
   type: "markChatItemsByAuthorAsDeletedAction";
   channelId: string;
-  timestampUsec: string;
+  timestamp: Date;
 }
 
 export interface ChatDeletionAction {
   type: "markChatItemAsDeletedAction";
   retracted: boolean;
   targetId: string;
-  timestampUsec: string;
+  timestamp: Date;
 }
 
 export interface TextArray {

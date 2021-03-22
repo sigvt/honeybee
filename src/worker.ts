@@ -145,7 +145,7 @@ export async function runWorker() {
   const queue = getQueueInstance({ activateDelayedJobs: true });
 
   queue.on("ready", () => {
-    console.log("WORKER READY");
+    console.log(`WORKER READY (concurrency: ${JOB_CONCURRENCY})`);
   });
 
   queue.on("stalled", (jobId) => {

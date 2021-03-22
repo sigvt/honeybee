@@ -76,6 +76,7 @@ function parseChatAction(action: RawAction): Action | undefined {
         type: "addChatItemAction",
         id: renderer.id,
         timestampUsec: renderer.timestampUsec,
+        timestamp: new Date(parseInt(renderer.timestampUsec, 10) / 1000),
         rawMessage: renderer.message?.runs,
         authorName: renderer.authorName?.simpleText,
         authorChannelId: renderer.authorExternalChannelId,
@@ -144,7 +145,7 @@ function parseChatAction(action: RawAction): Action | undefined {
       return {
         type: "markChatItemsByAuthorAsDeletedAction",
         channelId: action[type]!.externalChannelId,
-        timestampUsec: (Date.now() * 1000).toString(),
+        timestamp: new Date(),
       };
     case "markChatItemAsDeletedAction":
       const deletionAction = action[type]!;
@@ -154,7 +155,7 @@ function parseChatAction(action: RawAction): Action | undefined {
           deletionAction.deletedStateMessage.runs[0].text ===
           "[message retracted]",
         targetId: deletionAction.targetItemId,
-        timestampUsec: (Date.now() * 1000).toString(),
+        timestamp: new Date(),
       };
     case "addLiveChatTickerItemAction":
       // Superchat ticker

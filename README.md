@@ -53,7 +53,7 @@ terraform destroy
 
 ```bash
 docker run --rm --network honeybee -it \
-  -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/honeybee \
+  -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/${MONGO_DATABASE} \
   -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis \
   -e NODE_OPTIONS=--max-old-space-size=32768 \
   ${HONEYBEE_IMAGE} \

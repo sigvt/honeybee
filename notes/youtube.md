@@ -1,6 +1,3 @@
-// archive iB3ZDO7O2mc
-// uploads hPYUvqnWnE4
-
 ## endpoints
 
 LiveChat DOM = https://www.youtube.com/live_chat?continuation=<continuation>
@@ -12,7 +9,29 @@ LiveChat API = https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=<
 .continuationContents.liveChatContinuation.header.liveChatHeaderRenderer.viewSelector.sortFilterSubMenuRenderer.subMenuItems[].continuation.reloadContinuationData
 ```
 
-## custom emojis
+## rawMessages
+
+### navigationEndpoint
+
+```json
+[
+  {
+    "text": "https://www.youtube.com/watch?v=KpSLi...",
+    "navigationEndpoint": {
+      "watchEndpoint": { "nofollow": true, "videoId": "<videoid>" },
+      "commandMetadata": {
+        "webCommandMetadata": {
+          "url": "/watch?v=<videoid>",
+          "rootVe": 3832,
+          "webPageType": "WEB_PAGE_TYPE_WATCH"
+        }
+      }
+    }
+  }
+]
+```
+
+### custom emojis
 
 ```json
 {
@@ -87,7 +106,7 @@ Mark as banned by YouTube system? all messages from `externalChannelId` should b
         }
       ]
     },
-    "externalChannelId": "UCnqNxH3Oib9VQQZEbOim_7g"
+    "externalChannelId": "<channelid>"
   }
 }
 ```
@@ -102,7 +121,7 @@ insert accepted message into the placeholder?
 
 ```json
 {
-  "targetItemId": "CjkKGkNMYndyNjY3N3UwQ0ZYd3FyUVlkblZjUGZnEhtDUEh5dHZTYjd1MENGVDVBOVFVZEtkc0xTdzc%3D",
+  "targetItemId": "<chaid>",
   "replacementItem": {
     "liveChatTextMessageRenderer": {
       "message": {
@@ -115,9 +134,9 @@ insert accepted message into the placeholder?
       "authorName": {
         "simpleText": "のへちん"
       },
-      "id": "CjkKGkNMYndyNjY3N3UwQ0ZYd3FyUVlkblZjUGZnEhtDUEh5dHZTYjd1MENGVDVBOVFVZEtkc0xTdzc%3D",
+      "id": "<chaid>",
       "timestampUsec": "1609082482718809",
-      "authorExternalChannelId": "UCwuU7X4tWQKfCC3xJDSZUpw"
+      "authorExternalChannelId": "<channelid>"
     }
   }
 }``
