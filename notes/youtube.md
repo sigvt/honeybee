@@ -1,9 +1,9 @@
-## endpoints
+## Endpoints
 
-LiveChat DOM = https://www.youtube.com/live_chat?continuation=<continuation>
-LiveChat API = https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=<innertubeApiKey>
+- LiveChat DOM = https://www.youtube.com/live_chat?continuation=<continuation>
+- LiveChat API = https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=<innertubeApiKey>
 
-## selecting chat server
+## Chat server
 
 ```
 .continuationContents.liveChatContinuation.header.liveChatHeaderRenderer.viewSelector.sortFilterSubMenuRenderer.subMenuItems[].continuation.reloadContinuationData
@@ -66,11 +66,13 @@ LiveChat API = https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=<
 - OWNER
 - MODERATOR
 
-## authorExternalChannelId
+#### authorExternalChannelId
 
 Author channel id
 
-## markChatItemAsDeletedAction
+## Actions
+
+### markChatItemAsDeletedAction
 
 Message deleted by OP or Moderator.
 
@@ -88,11 +90,11 @@ Message deleted by OP or Moderator.
 }
 ```
 
-## liveChatTickerSponsorItemRenderer
+### liveChatTickerSponsorItemRenderer
 
 New Membership
 
-## markChatItemsByAuthorAsDeletedAction
+### markChatItemsByAuthorAsDeletedAction
 
 Mark as banned by YouTube system? all messages from `externalChannelId` should be deleted.
 
@@ -111,11 +113,11 @@ Mark as banned by YouTube system? all messages from `externalChannelId` should b
 }
 ```
 
-## liveChatPlaceholderItemRenderer
+### liveChatPlaceholderItemRenderer
 
 placeholder for the message being censored? NG word?
 
-## replaceChatItemAction
+### replaceChatItemAction
 
 insert accepted message into the placeholder?
 
@@ -142,7 +144,7 @@ insert accepted message into the placeholder?
 }``
 ```
 
-# live chat custom CSS for OBS
+## Custom CSS for OBS overlays
 
 ```css
 body {

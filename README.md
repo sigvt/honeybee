@@ -2,6 +2,14 @@
 
 ![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header.png)
 
+Honeybee is a distributed YouTube live chat and moderation events collector.
+
+## How it works
+
+- Fetch streams index from Holodex (every 10 minutes)
+- Queue newly scheduled streams to a job pool
+- One of the cluster members takes it and start collecting events
+
 ## Spin up a cluster
 
 ```bash
@@ -36,7 +44,7 @@ sed -i "s/MONGO_WORKER_PASSWORD=/MONGO_WORKER_PASSWORD=<password>/" .env
 make health
 ```
 
-## Deploy additional worker nodes
+## Deploy additional cluster nodes
 
 ```bash
 cd tf
@@ -44,7 +52,7 @@ terraform init
 terraform apply -var total_workers=5
 ```
 
-### Teardown workers
+### Teardown cluster nodes
 
 ```bash
 cd tf
