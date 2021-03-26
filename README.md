@@ -8,24 +8,26 @@
 cp .env.placeholder .env
 vim .env
 
-docker swarm init --advertise-addr $(curl -s https://ifconfig.co/ip)
+docker swarm init --advertise-addr $(curl -s https://api.ipify.org)
 docker network create -d overlay --attachable honeybee
 docker stack deploy -c cluster.yml hb
 ```
 
 ```bash
 # in master node
-docker exec -it hb_mongo.1.<task_id> mongo -u honeybee
+make logindb
 ```
 
 ```js
-use honeybee
-
 db.createUser({
   user: "worker",
   pwd: passwordPrompt(), // or cleartext password
   roles: [{ role: "readWrite", db: "honeybee" }],
 });
+```
+
+```bash
+sed -i "s/MONGO_WORKER_PASSWORD=/MONGO_WORKER_PASSWORD=<password>/" .env
 ```
 
 ## Show cluster health
@@ -52,10 +54,5 @@ terraform destroy
 ## Run one-shot task
 
 ```bash
-docker run --rm --network honeybee -it \
-  -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/${MONGO_DATABASE} \
-  -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis \
-  -e NODE_OPTIONS=--max-old-space-size=32768 \
-  ${HONEYBEE_IMAGE} \
-  honeybee --help
+./hb --help
 ```
