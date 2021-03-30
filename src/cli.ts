@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import yargs from "yargs";
-import { inspectChat } from "./commands/inspectChat";
 import { migrateDatetime } from "./commands/migrateDatetime";
 import { migrateJsonl } from "./commands/migrateJsonl";
 import { removeDuplicatedActions } from "./commands/removeDuplicatedActions";
@@ -19,16 +18,6 @@ process.on("SIGINT", () => {
 
 yargs(process.argv.slice(2))
   .scriptName("honeybee")
-  .command(
-    "inspect <videoId>",
-    "inspect the live chat messages",
-    (yargs) => {
-      yargs.positional("videoId", {
-        describe: "video id",
-      });
-    },
-    inspectChat
-  )
   .command("health", "show cluster health", showClusterHealth)
   .command(
     "removeDuplicatedActions",
