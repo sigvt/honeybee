@@ -1,6 +1,4 @@
 import BeeQueue from "bee-queue";
-import { fetchContext, iterateChat } from "masterchat";
-import { Action, ReloadContinuationType } from "masterchat/lib/types/chat";
 import BanAction from "./models/BanAction";
 import Chat from "./models/Chat";
 import DeleteAction from "./models/DeleteAction";
@@ -12,6 +10,9 @@ import {
   Result,
   Stats,
 } from "./modules/queue";
+import { iterateChat } from "./modules/youtube/chat";
+import { fetchContext } from "./modules/youtube/context";
+import { Action, ReloadContinuationType } from "./modules/youtube/types/chat";
 import { groupBy } from "./util";
 
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
