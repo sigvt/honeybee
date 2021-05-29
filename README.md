@@ -48,7 +48,7 @@ make health
 
 ```bash
 cd tf
-terraform init
+terraform init -upgrade
 terraform apply -var total_workers=5
 ```
 
