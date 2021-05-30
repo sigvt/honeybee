@@ -1,6 +1,6 @@
 {
   "name": "honeybee",
-  "description": "honeybee",
+  "description": "a distributed YouTube live chat and moderation events collector.",
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
   "scripts": {
