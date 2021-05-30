@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import yargs from "yargs";
-import { migrateDatetime } from "./commands/migrateDatetime";
-import { migrateJsonl } from "./commands/migrateJsonl";
+import { migrateChat } from "./commands/migrateChat";
 import { removeDuplicatedActions } from "./commands/removeDuplicatedActions";
 import { showClusterHealth } from "./commands/showClusterHealth";
 import { runScheduler } from "./scheduler";
@@ -19,22 +18,8 @@ process.on("SIGINT", () => {
 yargs(process.argv.slice(2))
   .scriptName("honeybee")
   .command("health", "show cluster health", showClusterHealth)
-  .command(
-    "removeDuplicatedActions",
-    "remove duplicated actions",
-    removeDuplicatedActions
-  )
-  .command(
-    "migrateJsonl <input>",
-    "migrate JSONL file",
-    (yargs) => {
-      yargs.positional("input", {
-        describe: "jsonl file",
-      });
-    },
-    migrateJsonl
-  )
-  .command("migrateDatetime", "migrate datetime format", migrateDatetime)
+  .command("cleanupDupes", "remove duplicated actions", removeDuplicatedActions)
+  .command("migrateChat", "migrate datetime format", migrateChat)
   .command("scheduler", "start scheduler", runScheduler)
   .command("worker", "start worker", runWorker)
   .demandCommand(1).argv;
