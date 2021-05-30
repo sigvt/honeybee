@@ -1,4 +1,4 @@
-import { getModelForClass, index, prop } from "@typegoose/typegoose";
+import { getModelForClass, prop } from "@typegoose/typegoose";
 
 // @index({ channelId: 1, originVideoId: 1 }, { unique: true })
 class BanAction {
@@ -12,7 +12,7 @@ class BanAction {
   originChannelId!: string;
 
   @prop({ required: true, index: true })
-  timestamp?: Date;
+  timestamp!: Date;
 }
 
 export default getModelForClass(BanAction);

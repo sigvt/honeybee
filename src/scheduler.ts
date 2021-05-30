@@ -6,7 +6,8 @@ import { guessFreeChat } from "./util";
 
 const SHUTDOWN_TIMEOUT = 30 * 1000;
 const IGNORE_FREE_CHAT = false;
-const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
+
+const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 1);
 
 export async function runScheduler() {
   const queue = getQueueInstance({ isWorker: false });
@@ -23,7 +24,7 @@ export async function runScheduler() {
   });
 
   queue.on("ready", () => {
-    console.log("SCHEDULER READY");
+    console.log(`SCHEDULER READY (concurrency: ${JOB_CONCURRENCY})`);
   });
 
   queue.on("error", (err) => {

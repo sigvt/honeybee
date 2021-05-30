@@ -1,4 +1,4 @@
-import { getModelForClass, index, prop } from "@typegoose/typegoose";
+import { getModelForClass, prop } from "@typegoose/typegoose";
 
 // @index({ targetId: 1, originVideoId: 1 }, { unique: true })
 class DeleteAction {
@@ -15,7 +15,7 @@ class DeleteAction {
   originChannelId!: string;
 
   @prop({ required: true, index: true })
-  timestamp?: Date;
+  timestamp!: Date;
 }
 
 export default getModelForClass(DeleteAction);

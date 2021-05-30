@@ -4,18 +4,24 @@ import {
   prop,
   Severity,
 } from "@typegoose/typegoose";
-import { Membership, Purchase, Run } from "../modules/youtube/types/chat";
+import { Membership, SuperChat } from "masterchat/lib/chat";
+import { YTRun } from "masterchat/lib/types/chat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class Chat {
   @prop({ required: true, unique: true })
   public id!: string;
 
-  @prop({ allowMixed: true })
-  public rawMessage?: Run[];
+  @prop({ required: true, allowMixed: true })
+  public message!: YTRun[];
 
-  @prop({ allowMixed: true })
-  public purchase?: Purchase;
+  // TODO: migrate to message
+  // @prop({ allowMixed: true })
+  // public rawMessage?: YTRun[];
+
+  // TODO: will be moved to SuperChat
+  // @prop({ allowMixed: true })
+  // public purchase?: SuperChat;
 
   @prop({ allowMixed: true })
   public membership?: Membership;
@@ -45,10 +51,11 @@ class Chat {
   public originChannelId!: string;
 
   @prop({ required: true, index: true })
-  public timestamp?: Date;
+  public timestamp!: Date;
 
-  @prop()
-  public timestampUsec?: string;
+  // TODO: will be removed
+  // @prop()
+  // public timestampUsec?: string;
 }
 
 export default getModelForClass(Chat);

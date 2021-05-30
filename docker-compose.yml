@@ -21,6 +21,7 @@ services:
     command: honeybee scheduler
     environment:
       REDIS_URI: redis://redis
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-3}
     volumes:
       - "./lib:/app/lib"
       - "./node_modules:/app/node_modules"
@@ -32,7 +33,7 @@ services:
     environment:
       REDIS_URI: redis://redis
       MONGO_URI: mongodb://db/honeybee
-      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-5}
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-3}
     volumes:
       - "./lib:/app/lib"
       - "./node_modules:/app/node_modules"

@@ -10,12 +10,16 @@ import {
   Result,
   Stats,
 } from "./modules/queue";
-import { iterateChat } from "./modules/youtube/chat";
-import { fetchContext } from "./modules/youtube/context";
-import { Action, ReloadContinuationType } from "./modules/youtube/types/chat";
+import {
+  Action,
+  iterateChat,
+  ReloadContinuationType,
+} from "masterchat/lib/chat";
+import { fetchContext } from "masterchat/lib/context";
 import { groupBy } from "./util";
+import SuperChat from "./models/SuperChat";
 
-const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 50);
+const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 1);
 
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const { videoId } = job.data;
@@ -53,7 +57,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   workerLog(`Starting worker process for`, videoId);
 
-  const { apiKey, client, metadata } = await fetchContext(videoId);
+  const { auth, metadata, continuations } = await fetchContext(videoId);
 
   // check if the video is valid
   if (!metadata) {
@@ -61,28 +65,34 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     return { error: ErrorCode.MembershipOnly };
   }
 
-  const { continuations, title, channelName, isLive } = metadata;
+  const { title, channelName, isLive } = metadata;
 
   workerLog(`${title} (${channelName}) isLive=${isLive}`);
 
   if (!isLive) {
-    console.log("!isLive");
+    console.log("only live stream is supported");
     return { error: ErrorCode.UnknownError };
   }
 
   if (!continuations) {
+    // immediately fail so it can be queued as a delayed task
     throw new Error("reload continuation not found, meaning chat is disabled.");
   }
 
   const liveChatIteratorOptions = {
     token: continuations[ReloadContinuationType.All].token,
-    apiKey,
-    client,
-    isLiveChat: true,
+    ...auth,
   };
 
   // iterate over live chat
-  for await (const { actions, delay } of iterateChat(liveChatIteratorOptions)) {
+  for await (const response of iterateChat(liveChatIteratorOptions)) {
+    if (response.error) {
+      // TODO: properly handle various type of errors
+      continue;
+    }
+
+    const { actions, continuation } = response;
+
     if (actions.length > 0) {
       const actionsWithOrigin = actions.map((action) => ({
         ...action,
@@ -90,25 +100,83 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         originChannelId: metadata.channelId,
       }));
 
-      const grouped = groupBy(actionsWithOrigin, "type");
+      const groupedActions = groupBy(actionsWithOrigin, "type");
       const insertOptions = { ordered: false };
+      const actionTypes = Object.keys(groupedActions) as Action["type"][];
 
-      const bulkWrite = (Object.keys(grouped) as Action["type"][]).map(
-        (key) => {
-          const payload = grouped[key];
-          switch (key) {
-            case "addChatItemAction":
-              return Chat.insertMany(payload, insertOptions);
-            case "markChatItemAsDeletedAction":
-              return DeleteAction.insertMany(payload, insertOptions);
-            case "markChatItemsByAuthorAsDeletedAction":
-              return BanAction.insertMany(payload, insertOptions);
-            default:
-              const _exhaust: never = key;
-              return _exhaust;
+      const bulkWrite = actionTypes.map((type) => {
+        switch (type) {
+          case "addChatItemAction": {
+            const payload = groupedActions[type].map((action) => ({
+              id: action.id,
+              message: action.rawMessage,
+              membership: action.membership,
+              authorName: action.authorName,
+              authorChannelId: action.authorChannelId,
+              authorPhoto: action.authorPhoto,
+              isVerified: action.isVerified,
+              isOwner: action.isOwner,
+              isModerator: action.isModerator,
+              originVideoId: action.originVideoId,
+              originChannelId: action.originChannelId,
+              timestamp: action.timestamp,
+            }));
+            return Chat.insertMany(payload, insertOptions);
+          }
+          case "addSuperChatItemAction": {
+            const payload = groupedActions[type].map((action) => ({
+              id: action.id,
+              message: action.rawMessage,
+              purchaseAmount: action.superchat.amount,
+              currency: action.superchat.currency,
+              significance: action.superchat.significance,
+              color: action.superchat.color,
+              authorName: action.authorName,
+              authorChannelId: action.authorChannelId,
+              authorPhoto: action.authorPhoto,
+              originVideoId: action.originVideoId,
+              originChannelId: action.originChannelId,
+              timestamp: action.timestamp,
+            }));
+            return SuperChat.insertMany(payload, insertOptions);
+          }
+          case "markChatItemAsDeletedAction": {
+            const payload = groupedActions[type].map((action) => ({
+              targetId: action.targetId,
+              retracted: action.retracted,
+              originVideoId: action.originVideoId,
+              originChannelId: action.originChannelId,
+              timestamp: action.timestamp,
+            }));
+            return DeleteAction.insertMany(payload, insertOptions);
+          }
+          case "markChatItemsByAuthorAsDeletedAction": {
+            const payload = groupedActions[type].map((action) => ({
+              channelId: action.channelId,
+              originVideoId: action.originVideoId,
+              originChannelId: action.originChannelId,
+              timestamp: action.timestamp,
+            }));
+            return BanAction.insertMany(payload, insertOptions);
+          }
+          case "addSuperChatTickerAction":
+          case "addMembershipItemAction":
+          case "addMembershipTickerAction":
+          case "addPlaceholderItemAction":
+          case "replaceChatItemAction":
+          case "addSuperStickerItemAction":
+          case "addSuperStickerTickerAction":
+          case "addBannerAction":
+          case "removeBannerAction":
+          case "showTooltipAction":
+          case "addViewerEngagementMessageAction":
+            break;
+          default: {
+            const _exhaust: never = type;
+            return _exhaust;
           }
         }
-      );
+      });
 
       for (const write of bulkWrite) {
         try {
@@ -129,9 +197,11 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       refreshStats(actions);
     }
 
-    if (isLive) {
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
+    // live chat is over so skip waiting for next tick
+    if (!continuation) break;
+
+    const delay = continuation.timeoutMs;
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   workerLog(`Live stream is over: https://www.youtube.com/watch?v=${videoId}`);
