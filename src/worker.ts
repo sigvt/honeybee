@@ -108,6 +108,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         switch (type) {
           case "addChatItemAction": {
             const payload = groupedActions[type].map((action) => ({
+              timestamp: action.timestamp,
               id: action.id,
               message: action.rawMessage,
               membership: action.membership,
@@ -119,12 +120,12 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
               isModerator: action.isModerator,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
-              timestamp: action.timestamp,
             }));
             return Chat.insertMany(payload, insertOptions);
           }
           case "addSuperChatItemAction": {
             const payload = groupedActions[type].map((action) => ({
+              timestamp: action.timestamp,
               id: action.id,
               message: action.rawMessage,
               purchaseAmount: action.superchat.amount,
@@ -136,26 +137,25 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
               authorPhoto: action.authorPhoto,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
-              timestamp: action.timestamp,
             }));
             return SuperChat.insertMany(payload, insertOptions);
           }
           case "markChatItemAsDeletedAction": {
             const payload = groupedActions[type].map((action) => ({
+              timestamp: action.timestamp,
               targetId: action.targetId,
               retracted: action.retracted,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
-              timestamp: action.timestamp,
             }));
             return DeleteAction.insertMany(payload, insertOptions);
           }
           case "markChatItemsByAuthorAsDeletedAction": {
             const payload = groupedActions[type].map((action) => ({
+              timestamp: action.timestamp,
               channelId: action.channelId,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
-              timestamp: action.timestamp,
             }));
             return BanAction.insertMany(payload, insertOptions);
           }
