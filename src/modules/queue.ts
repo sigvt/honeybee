@@ -3,26 +3,9 @@ import Queue from "bee-queue";
 import redis from "redis";
 import { HolodexLiveStreamInfo } from "./holodex/types";
 
-export enum ErrorCode {
-  MembershipOnly,
-  UnknownError,
-}
-
-export interface Result {
-  error: ErrorCode | null;
-  result?: Stats;
-}
-
 export interface Job {
   videoId: string;
   stream: HolodexLiveStreamInfo;
-}
-
-export interface Stats {
-  chat: number;
-  retracted: number;
-  deleted: number;
-  banned: number;
 }
 
 // feature flags
@@ -34,6 +17,7 @@ export function getQueueInstance(args: any = {}) {
 
   return new Queue<Job>(QUEUE_NAME, {
     redis: redis.createClient(REDIS_URI),
+    stallInterval: 10 * 1000,
     ...args,
   });
 }

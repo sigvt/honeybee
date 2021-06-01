@@ -13,7 +13,7 @@ deploy:
 	docker stack deploy -c cluster.yml --with-registry-auth hb
 
 logs:
-	concurrently --names "SCHEDULER,WORKER" "docker service logs -f --tail=100 hb_scheduler" "docker service logs -f --tail=100 hb_worker"
+	concurrently --names "SCHEDULER,WORKER" "docker service logs -f --tail=1000 hb_scheduler" "docker service logs -f --tail=1000 hb_worker"
 
 ps:
 	docker stack ps hb

@@ -4,6 +4,7 @@
 /node_modules
 /data
 /notes
+/tf
 *.jsonl
 __nock-fixtures__
 .env

@@ -7,11 +7,13 @@ import { showClusterHealth } from "./commands/showClusterHealth";
 import { runScheduler } from "./scheduler";
 import { runWorker } from "./worker";
 
-process.on("unhandledRejection", () => {
+process.on("unhandledRejection", (err) => {
+  console.log(`!!!!!!!!!!!!!!CLI:unhandledRejection: ${err}`);
   process.exit(1);
 });
 
-process.on("SIGINT", () => {
+process.on("SIGINT", (err) => {
+  console.log("!!!!!!!!!!!!!!CLI:SIGINT");
   process.exit(1);
 });
 

@@ -3,9 +3,11 @@ import { Line, LineBuffer, Sparkline } from "clui";
 import BanAction from "../models/BanAction";
 import Chat from "../models/Chat";
 import DeleteAction from "../models/DeleteAction";
+import SuperChat from "../models/SuperChat";
 import { initMongo } from "../modules/db";
 import { getQueueInstance } from "../modules/queue";
 import { DeltaCollection, timeoutThen } from "../util";
+import { Stats } from "../worker";
 
 const REFRESH_INTERVAL = Number(process.env.REFRESH_INTERVAL || 10);
 
@@ -19,15 +21,27 @@ export async function showClusterHealth() {
     process.exit(0);
   });
 
-  const col = new DeltaCollection(80);
+  const col = new DeltaCollection(60);
 
   col.addRecord("chat", () => Chat.estimatedDocumentCount());
+  col.addRecord("superchat", () => SuperChat.estimatedDocumentCount());
   col.addRecord("ban", () => BanAction.estimatedDocumentCount());
   col.addRecord("deletion", () => DeleteAction.estimatedDocumentCount());
 
   while (true) {
     const queueHealth = await queue.checkHealth();
-    await col.fetch();
+    const activeJobs = await queue.getJobs("active", { start: 0, end: 300 });
+
+    let nbWarmingUp = 0;
+    let nbTotal = 0;
+    for (const job of activeJobs) {
+      nbTotal += 1;
+      const progress: Stats = job.progress;
+      if (progress.isWarmingUp) nbWarmingUp += 1;
+    }
+    const nbActive = nbTotal - nbWarmingUp;
+
+    await col.refresh();
 
     const outputBuffer = new LineBuffer({
       x: 0,
@@ -46,20 +60,22 @@ export async function showClusterHealth() {
 
     outputBuffer.addLine(new Line().fill());
 
-    const COLUMN_WIDTH = 20;
+    const COLUMN_WIDTH = 13;
     outputBuffer.addLine(
       new Line()
         .column("Chat", COLUMN_WIDTH, [clc.cyan])
+        .column("SuperChat", COLUMN_WIDTH, [clc.cyan])
         .column("Ban", COLUMN_WIDTH, [clc.cyan])
         .column("Deletion", COLUMN_WIDTH, [clc.cyan])
         .column("Active", COLUMN_WIDTH, [clc.cyan])
+        .column("WarmingUp", COLUMN_WIDTH, [clc.cyan])
         .column("Delayed", COLUMN_WIDTH, [clc.cyan])
         .column("Waiting", COLUMN_WIDTH, [clc.cyan])
         .fill()
     );
 
     outputBuffer.addLine(
-      ["chat", "ban", "deletion"]
+      ["chat", "superchat", "ban", "deletion"]
         .reduce(
           (line, name) =>
             line.column(
@@ -68,7 +84,8 @@ export async function showClusterHealth() {
             ),
           new Line()
         )
-        .column(queueHealth.active.toString(), COLUMN_WIDTH)
+        .column(`${nbActive} (${queueHealth.active})`, COLUMN_WIDTH)
+        .column(nbWarmingUp.toString(), COLUMN_WIDTH)
         .column(queueHealth.delayed.toString(), COLUMN_WIDTH)
         .column(queueHealth.waiting.toString(), COLUMN_WIDTH)
         .fill()

@@ -76,7 +76,7 @@ export class DeltaCollection {
     return record;
   }
 
-  async fetch() {
+  async refresh() {
     for (const record of this.records) {
       const data = await Promise.resolve(record.updater());
       const lastDelta = data - (record.current ?? data);
