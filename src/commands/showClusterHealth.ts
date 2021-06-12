@@ -84,7 +84,7 @@ export async function showClusterHealth() {
             ),
           new Line()
         )
-        .column(`${nbActive} (${queueHealth.active})`, COLUMN_WIDTH)
+        .column(nbActive.toString(), COLUMN_WIDTH)
         .column(nbWarmingUp.toString(), COLUMN_WIDTH)
         .column(queueHealth.delayed.toString(), COLUMN_WIDTH)
         .column(queueHealth.waiting.toString(), COLUMN_WIDTH)

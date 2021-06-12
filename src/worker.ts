@@ -30,6 +30,7 @@ export interface Result {
   result?: Stats;
 }
 
+const SHUTDOWN_TIMEOUT = 30 * 1000;
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 1);
 
 function msecToMin(msec: number) {
@@ -39,12 +40,12 @@ function minToMsec(min: number) {
   return Math.ceil(min * 60 * 1000);
 }
 
-function workerLog(...obj: any) {
-  console.log(`worker:`, ...obj);
-}
-
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const { videoId } = job.data;
+
+  function videoLog(...obj: any) {
+    console.log(`${videoId} -`, ...obj);
+  }
 
   let stats: Stats = { handled: 0, errors: 0, isWarmingUp: true };
 
@@ -57,10 +58,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   // warming up (0 to 30 sec)
   const warmUpDuration = Math.floor(Math.random() * 1000 * 30);
-  workerLog(
-    `WarmUp: waiting for ${Math.ceil(
-      warmUpDuration / 1000
-    )} seconds for ${videoId}`
+  videoLog(
+    `waiting for ${Math.ceil(warmUpDuration / 1000)} seconds before proceeding`
   );
   const interval = setInterval(() => {
     job.reportProgress(stats);
@@ -73,6 +72,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   const context = await fetchContext(videoId);
   if (!context) {
+    videoLog("no context. YT ban detected");
     throw new Error("possibly YT ban");
   }
 
@@ -80,14 +80,14 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   // check if the video is valid
   if (!metadata) {
-    workerLog(`${videoId} is membership only stream`);
+    videoLog(`membership only stream`);
     return { error: ErrorCode.MembershipOnly };
   }
 
   const { isLive } = metadata;
 
   if (!isLive) {
-    workerLog(`${videoId} is not live`);
+    videoLog(`offline`);
     return { error: ErrorCode.UnknownError };
   }
 
@@ -96,7 +96,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     throw new Error("chat is disabled");
   }
 
-  workerLog(`start collecting ${videoId}`);
+  videoLog(`start processing live chats`);
 
   const liveChatIteratorOptions = {
     token: continuations[ReloadContinuationType.All].token,
@@ -117,7 +117,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           break chatIteration;
         }
         default: {
-          workerLog(`Error while handling ${videoId}: `, response.error);
+          videoLog(`Error:`, response.error);
           throw new Error(
             `${response.error.status}: ${response.error.message}`
           );
@@ -222,12 +222,12 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           // code: number
           stats.errors += 1;
           if (err.code === 11000) {
-            workerLog(
-              `some chats were dupes, inserted=${err.insertedDocs.length} code=${err.code}`
+            videoLog(
+              `some chats were dupes and ignored while ${err.insertedDocs.length} chat(s) inserted (${err.code})`
             );
           } else {
             // getaddrinfo ENOTFOUND mongo
-            workerLog(
+            videoLog(
               "unrecognized error",
               err.type,
               err.code,
@@ -250,7 +250,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     await timeoutThen(delay);
   }
 
-  workerLog(`Live stream is over: https://www.youtube.com/watch?v=${videoId}`);
+  videoLog(`live stream ended`);
 
   return { error: null, result: stats };
 }
@@ -260,10 +260,27 @@ export async function runWorker() {
   const disconnectFromMongo = await initMongo();
   const queue = getQueueInstance({ activateDelayedJobs: true });
 
+  process.on("SIGTERM", async () => {
+    console.log("quitting worker (SIGTERM) ...");
+
+    try {
+      await disconnectFromMongo();
+      await queue.close(SHUTDOWN_TIMEOUT);
+    } catch (err) {
+      console.log("bee-queue failed to shut down gracefully", err);
+    }
+    process.exit(0);
+  });
+
   queue.on("ready", () => {
-    workerLog(
-      `#################### queue ready (concurrency: ${JOB_CONCURRENCY})`
-    );
+    console.log(`starting worker (concurrency: ${JOB_CONCURRENCY})`);
+  });
+
+  // Redis related error
+  queue.on("error", (err) => {
+    // code: 'EHOSTUNREACH'
+    console.log("queue got error (will terminate):", err);
+    process.exit(1);
   });
 
   // it's the queue instance that happened to detect the stalled job.
@@ -271,36 +288,10 @@ export async function runWorker() {
   //   workerLog(`detected stalled job ${jobId} `);
   // });
 
-  // Redis related error
-  queue.on("error", (err) => {
-    // code: 'EHOSTUNREACH'
-    workerLog("redis related error:", err);
-    process.exit(1);
-  });
-
   // Job related error
   // queue.on("failed", (job, err) => {
   //   workerLog(`while handling ${job.id} got ${err.message}`);
   // });
 
   queue.process<Result>(JOB_CONCURRENCY, handleJob);
-
-  // Some reasonable period of time for all your concurrent jobs to finish
-  // processing. If a job does not finish processing in this time, it will stall
-  // and be retried. As such, do attempt to make your jobs idempotent, as you
-  // generally should with any queue that provides at-least-once delivery.
-  const TIMEOUT = 30 * 1000;
-
-  process.on("uncaughtException", async (err) => {
-    workerLog("!!!!!!!!!!!!!!uncaughtException", err);
-
-    // Queue#close is idempotent - no need to guard against duplicate calls.
-    try {
-      await queue.close(TIMEOUT);
-      await disconnectFromMongo();
-    } catch (err) {
-      workerLog("!!!!!!!!!!!!!!bee-queue failed to shut down gracefully", err);
-    }
-    process.exit(1);
-  });
 }

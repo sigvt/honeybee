@@ -6,12 +6,11 @@ import { guessFreeChat, timeoutThen } from "./util";
 import { ErrorCode, Result, Stats } from "./worker";
 
 const SHUTDOWN_TIMEOUT = 30 * 1000;
-const IGNORE_FREE_CHAT = false;
-
-const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 1);
+const IGNORE_FREE_CHAT = process.env.IGNORE_FREE_CHAT ?? false;
+const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY ?? 1);
 
 function schedulerLog(...obj: any) {
-  console.log(`scheduler:`, ...obj);
+  console.log(...obj);
 }
 
 export async function runScheduler() {
@@ -19,14 +18,14 @@ export async function runScheduler() {
   const handledVideoIdCache: Set<string> = new Set();
 
   process.on("SIGTERM", async () => {
-    console.log("!!!!!!!!!!!!!!!!!!Got SIGTERM");
-    // Queue#close is idempotent - no need to guard against duplicate calls.
+    schedulerLog("quitting scheduler (SIGTERM) ...");
+
     try {
       await queue.close(SHUTDOWN_TIMEOUT);
     } catch (err) {
       schedulerLog("bee-queue failed to shut down gracefully", err);
     }
-    process.exit(1);
+    process.exit(0);
   });
 
   async function handleStream(stream: HolodexLiveStreamInfo) {
@@ -44,9 +43,9 @@ export async function runScheduler() {
       : 0;
     const startsInMin = Math.floor(startUntil / 1000 / 60);
     if (startsInMin < -10080 && !guessFreeChat(title)) {
-      schedulerLog(
-        `${videoId} (${title}) will be ignored. it was started in ${startsInMin} min and not a free chat, which must be strayed stream.`
-      );
+      // schedulerLog(
+      //   `${videoId} (${title}) will be ignored. it was started in ${startsInMin} min and not a free chat, which must be strayed stream.`
+      // );
       return;
     }
 
@@ -66,12 +65,12 @@ export async function runScheduler() {
       .save();
 
     schedulerLog(
-      `scheduled ${videoId} (${title}), starts in ${startsInMin} minutes`
+      `scheduled ${videoId} (${title}) starting in ${startsInMin} minutes`
     );
 
     handledVideoIdCache.add(videoId);
 
-    await timeoutThen(5 * 1000);
+    await timeoutThen(3 * 1000);
   }
 
   async function rearrange(invokedAt: Date) {
@@ -83,16 +82,24 @@ export async function runScheduler() {
       await queue.getJobs("active", { start: 0, end: 300 })
     ).map((job) => job.data.videoId);
 
-    const liveAndUpcomingStreams = (await fetchLiveStreams()).filter(
+    const liveAndUpcomingStreams = await fetchLiveStreams();
+
+    const unscheduledStreams = liveAndUpcomingStreams.filter(
       (stream) => !alreadyActiveJobs.includes(stream.id)
     );
 
-    if (liveAndUpcomingStreams.length === 0) {
-      schedulerLog("liveAndUpcomingStreams.length === 0");
+    schedulerLog(`currently ${alreadyActiveJobs.length} job(s) are running`);
+
+    if (unscheduledStreams.length === 0) {
+      schedulerLog("no new streams");
       return;
     }
 
-    for (const stream of liveAndUpcomingStreams) {
+    schedulerLog(
+      `will schedule ${unscheduledStreams.length} stream(s) out of ${liveAndUpcomingStreams.length} streams`
+    );
+
+    for (const stream of unscheduledStreams) {
       await handleStream(stream);
     }
 
@@ -107,8 +114,8 @@ export async function runScheduler() {
       if (progress.isWarmingUp) nbWarmingUp += 1;
     }
     console.log(
-      `# METRICS
-Total=${nbTotal} (${health.active})
+      `<| Queue Metrics |>
+Total=${nbTotal}
 Active=${nbTotal - nbWarmingUp}
 WarmingUp=${nbWarmingUp}
 Waiting=${health.waiting}
@@ -129,7 +136,7 @@ Delayed=${health.delayed}`
   });
 
   queue.on("stalled", (jobId) => {
-    schedulerLog("[stalled]:", "detection report", jobId);
+    schedulerLog("[stalled]:", jobId);
   });
 
   queue.on("job succeeded", async (jobId, result: Result) => {
@@ -195,15 +202,13 @@ Delayed=${health.delayed}`
   });
 
   queue.on("ready", async () => {
-    await timeoutThen(1000 * 10);
+    console.log(`starting scheduler (concurrency: ${JOB_CONCURRENCY})`);
 
     handledVideoIdCache.clear();
 
-    console.log(`QUEUE READY (concurrency: ${JOB_CONCURRENCY})`);
-
     const scheduler = schedule.scheduleJob("*/10 * * * *", rearrange);
 
-    console.log("Honeybee Scheduler has been started:", scheduler.name);
+    console.log("scheduler has been started:", scheduler.name);
 
     await rearrange(new Date());
   });

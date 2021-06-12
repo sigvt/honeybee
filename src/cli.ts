@@ -8,13 +8,18 @@ import { runScheduler } from "./scheduler";
 import { runWorker } from "./worker";
 
 process.on("unhandledRejection", (err) => {
-  console.log(`!!!!!!!!!!!!!!CLI:unhandledRejection: ${err}`);
+  console.log("CLI got unhandledRejection", err);
+  process.exit(1);
+});
+
+process.on("uncaughtException", async (err) => {
+  console.log("CLI got uncaughtException", err);
   process.exit(1);
 });
 
 process.on("SIGINT", (err) => {
-  console.log("!!!!!!!!!!!!!!CLI:SIGINT");
-  process.exit(1);
+  console.log("Keyboard interrupt");
+  process.exit(0);
 });
 
 yargs(process.argv.slice(2))
