@@ -14,7 +14,7 @@ resource "digitalocean_droplet" "node" {
   image  = "docker-20-04"
   region = var.region
   count  = var.total_workers
-  name   = format("honeybee-worker-%02d.%s", count.index + 1, var.region)
+  name   = format("honeybee-%02d.%s", count.index + 1, var.region)
   size   = "s-1vcpu-1gb"
   tags = [
     "honeybee"

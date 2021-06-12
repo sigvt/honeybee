@@ -13,7 +13,8 @@ services:
     deploy:
       replicas: 1
       placement:
-        constraints: [node.role == manager]
+        constraints:
+          - node.hostname == ${MAIN_NODE_HOSTNAME}
       restart_policy:
         condition: on-failure
 
@@ -25,7 +26,8 @@ services:
     deploy:
       replicas: 1
       placement:
-        constraints: [node.role == manager]
+        constraints:
+          - node.hostname == ${MAIN_NODE_HOSTNAME}
       restart_policy:
         condition: on-failure
 
@@ -40,7 +42,8 @@ services:
     deploy:
       replicas: 1
       placement:
-        constraints: [node.role == manager]
+        constraints:
+          - node.hostname == ${MAIN_NODE_HOSTNAME}
       restart_policy:
         condition: on-failure
 

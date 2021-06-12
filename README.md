@@ -22,7 +22,7 @@ docker stack deploy -c cluster.yml hb
 ```
 
 ```bash
-# in master node
+# in main node
 make logindb
 ```
 
@@ -44,15 +44,18 @@ sed -i "s/MONGO_WORKER_PASSWORD=/MONGO_WORKER_PASSWORD=<password>/" .env
 make health
 ```
 
-## Deploy additional cluster nodes
+## Employ external nodes
 
 ```bash
 cd tf
 terraform init -upgrade
-terraform apply -var total_workers=5
+terraform apply -var total_workers=3
+
+docker node ls # list nodes
+docker node promote <node> # promote some nodes as manager in case of changing ip address of main node
 ```
 
-### Teardown cluster nodes
+### Teardown external nodes
 
 ```bash
 cd tf
