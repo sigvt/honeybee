@@ -20,9 +20,9 @@ services:
 
   redis:
     image: redis:6-alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    # volumes:
-    #   - ${DATA_DIR:-./data}/redis:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - ${DATA_DIR:-./data}/redis:/data
     deploy:
       replicas: 1
       placement:

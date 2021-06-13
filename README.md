@@ -61,9 +61,3 @@ docker node promote <node> # promote some nodes as manager in case of changing i
 cd tf
 terraform destroy
 ```
-
-## Run one-shot task
-
-```bash
-./hb --help
-```
