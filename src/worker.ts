@@ -72,8 +72,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   const context = await fetchContext(videoId);
   if (!context) {
-    videoLog("no context. YT ban detected");
-    throw new Error("possibly YT ban");
+    videoLog("no config");
+    return { error: ErrorCode.UnknownError };
   }
 
   const { metadata, continuations, auth } = context;
@@ -209,6 +209,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             case "removeBannerAction":
             case "showTooltipAction":
             case "addViewerEngagementMessageAction":
+            case "updateLiveChatPollAction":
+            case "modeChangeAction":
               break;
             default: {
               const _exhaust: never = type;
@@ -279,6 +281,7 @@ export async function runWorker() {
   // Redis related error
   queue.on("error", (err) => {
     // code: 'EHOSTUNREACH'
+    console.log(queue.jobs);
     console.log("queue got error (will terminate):", err);
     process.exit(1);
   });

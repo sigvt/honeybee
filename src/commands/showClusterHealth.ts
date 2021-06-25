@@ -92,7 +92,7 @@ export async function showClusterHealth() {
     );
 
     outputBuffer.addLine(
-      ["chat", "ban", "deletion"]
+      ["chat", "superchat", "ban", "deletion"]
         .reduce(
           (line, name) =>
             line.column("+" + col.get(name)!.lastDelta, COLUMN_WIDTH, [
@@ -105,7 +105,7 @@ export async function showClusterHealth() {
 
     outputBuffer.addLine(new Line().fill());
 
-    ["chat", "ban", "deletion"].forEach((name: string) => {
+    ["chat", "superchat", "ban", "deletion"].forEach((name: string) => {
       outputBuffer.addLine(
         new Line()
           .column(

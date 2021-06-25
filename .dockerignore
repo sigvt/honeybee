@@ -9,3 +9,4 @@
 __nock-fixtures__
 .env
 .envrc
+*.log
