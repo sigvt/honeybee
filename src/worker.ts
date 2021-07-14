@@ -13,6 +13,7 @@ import {
 import { fetchContext } from "masterchat/lib/context";
 import { groupBy, timeoutThen } from "./util";
 import SuperChat from "./models/SuperChat";
+import { YTChatErrorStatus } from "masterchat/lib/types/chat";
 
 export interface Stats {
   handled: number;
@@ -113,11 +114,15 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       // if resolve -> throw back at scheduler
       switch (response.error.status) {
         case FetchChatErrorStatus.ContinuationNotFound: {
+          videoLog("IterError: ContinuationNotFound");
           // live stream is over
           break chatIteration;
         }
+        case YTChatErrorStatus.Unavailable:
+        case YTChatErrorStatus.NotFound:
+        case YTChatErrorStatus.PermissionDenied:
         default: {
-          videoLog(`Error:`, response.error);
+          videoLog(`IterError:`, response.error.status, response.error.message);
           throw new Error(
             `${response.error.status}: ${response.error.message}`
           );
@@ -246,7 +251,10 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     }
 
     // live chat is over so skip waiting for next tick
-    if (!continuation) break;
+    if (!continuation) {
+      videoLog("live chat is over so skip waiting for next tick");
+      break;
+    }
 
     const delay = continuation.timeoutMs;
     await timeoutThen(delay);

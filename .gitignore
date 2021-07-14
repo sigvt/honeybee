@@ -4,6 +4,7 @@ yarn.lock
 __nock-fixtures__
 .env
 .envrc
+.vscode
 /data
 
 # Created by https://www.toptal.com/developers/gitignore/api/node

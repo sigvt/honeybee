@@ -1,16 +1,15 @@
 import { appendFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
+interface Record {
+  name: string;
+  current: number | undefined;
+  lastDelta: number;
+  history: number[];
+  updater: (...args: any) => any | Promise<any>;
+}
+
 export function log(message: string, payload?: any): void {
-  // appendFileSync(
-  //   join(process.cwd(), "collector.log"),
-  //   Date.now() +
-  //     "," +
-  //     message.trim() +
-  //     "," +
-  //     (payload ? JSON.stringify(payload) : "") +
-  //     "\n"
-  // );
   console.log(message);
 }
 
@@ -46,14 +45,6 @@ export function assertUnreachable(_: never): never {
 
 export function timeoutThen(duration: number): Promise<number> {
   return new Promise((resolve) => setTimeout(resolve, duration));
-}
-
-interface Record {
-  name: string;
-  current: number | undefined;
-  lastDelta: number;
-  history: number[];
-  updater: (...args: any) => any | Promise<any>;
 }
 
 export class DeltaCollection {
