@@ -4,16 +4,11 @@ import Chat from "./models/Chat";
 import DeleteAction from "./models/DeleteAction";
 import { initMongo } from "./modules/db";
 import { getQueueInstance, Job } from "./modules/queue";
-import {
-  Action,
-  FetchChatErrorStatus,
-  iterateChat,
-  ReloadContinuationType,
-} from "masterchat/lib/chat";
-import { fetchContext } from "masterchat/lib/context";
 import { groupBy, timeoutThen } from "./util";
 import SuperChat from "./models/SuperChat";
+import { fetchContext, iterateChat } from "masterchat";
 import { YTChatErrorStatus } from "masterchat/lib/types/chat";
+import { Action, FetchChatErrorStatus } from "masterchat/lib/chat";
 
 export interface Stats {
   handled: number;
@@ -73,11 +68,14 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   const context = await fetchContext(videoId);
   if (!context) {
-    videoLog("no config");
-    return { error: ErrorCode.UnknownError };
+    videoLog("no context", new Date());
+    videoLog("https://www.youtube.com/watch?v=" + videoId);
+    const ytbanError = new Error("YTBAN");
+    ytbanError.name = "YTBAN";
+    throw ytbanError;
   }
 
-  const { metadata, continuations, auth } = context;
+  const { metadata, chat, apiKey } = context;
 
   // check if the video is valid
   if (!metadata) {
@@ -92,7 +90,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     return { error: ErrorCode.UnknownError };
   }
 
-  if (!continuations) {
+  if (!chat) {
     // immediately fail so it can be queued as a delayed task
     throw new Error("chat is disabled");
   }
@@ -100,8 +98,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   videoLog(`start processing live chats`);
 
   const liveChatIteratorOptions = {
-    token: continuations[ReloadContinuationType.All].token,
-    ...auth,
+    token: chat.continuations.all.token,
+    apiKey,
   };
 
   // iterate over live chat
@@ -113,7 +111,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       // if reject  -> will retry
       // if resolve -> throw back at scheduler
       switch (response.error.status) {
-        case FetchChatErrorStatus.ContinuationNotFound: {
+        case FetchChatErrorStatus.LiveChatDisabled: {
           videoLog("IterError: ContinuationNotFound");
           // live stream is over
           break chatIteration;
@@ -216,6 +214,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             case "addViewerEngagementMessageAction":
             case "updateLiveChatPollAction":
             case "modeChangeAction":
+            case "showLiveChatActionPanelAction":
+            case "closeLiveChatActionPanelAction":
               break;
             default: {
               const _exhaust: never = type;

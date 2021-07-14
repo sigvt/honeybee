@@ -12,9 +12,10 @@ import SuperChat from "../models/SuperChat";
 //     },
 //   },
 // ]);
-// db.banactions.update({}, {$unset: {timestampUsec: 1}}, false, true);
-// db.banactions.createIndex({'timestamp': 1})
-// db.banactions.getIndexes()
+// db.chats.update({}, {$unset: {timestampUsec: 1}}, false, true);
+// db.chats.createIndex({'timestamp': 1})
+// db.chats.getIndexes()
+// db.chats.find({timestamp: {$gte: new Date('2021-07-01')}, authorChannelId: '', originChannelId: ''}, {timestamp: 1, membership: 1, message: 1}).sort({timestamp: -1}).limit(1)
 
 // Map from headerBackgroundColor to color name
 export const SUPERCHAT_COLOR_MAP = {

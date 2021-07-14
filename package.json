@@ -25,7 +25,7 @@
     "chalk": "^4.1.1",
     "cli-color": "^2.0.0",
     "clui": "^0.3.6",
-    "masterchat": "^0.4.3",
+    "masterchat": "0.6.0",
     "mongoose": "5.10.18",
     "node-fetch": "^2.6.1",
     "node-schedule": "^2.0.0",

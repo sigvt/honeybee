@@ -2,7 +2,7 @@ version: "3.2"
 
 services:
   db:
-    image: mongo:4
+    image: mongo:5
     ports:
       - "27017:27017"
     volumes:
@@ -23,6 +23,7 @@ services:
     environment:
       REDIS_URI: redis://redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY:-3}
+      HOLODEX_API_KEY: ${HOLODEX_API_KEY}
     volumes:
       - "./lib:/app/lib"
       - "./node_modules:/app/node_modules"
