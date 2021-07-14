@@ -37,6 +37,7 @@ services:
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
+      HOLODEX_API_KEY: ${HOLODEX_API_KEY}
     depends_on:
       - redis
     deploy:
