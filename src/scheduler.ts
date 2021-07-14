@@ -9,8 +9,7 @@ import assert from "assert";
 const SHUTDOWN_TIMEOUT = 30 * 1000;
 const IGNORE_FREE_CHAT = process.env.IGNORE_FREE_CHAT ?? false;
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY ?? 1);
-const HOLODEX_API_KEY = process.env.HOLODEX_API_KEY!;
-assert(HOLODEX_API_KEY);
+const HOLODEX_API_KEY = process.env.HOLODEX_API_KEY;
 
 function schedulerLog(...obj: any) {
   console.log(...obj);
@@ -77,6 +76,8 @@ export async function runScheduler() {
   }
 
   async function rearrange(invokedAt: Date) {
+    assert(HOLODEX_API_KEY);
+
     schedulerLog("@@@@@@@@ updating index", invokedAt);
 
     await queue.checkStalledJobs();
