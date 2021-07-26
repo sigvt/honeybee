@@ -52,7 +52,7 @@ terraform init -upgrade
 terraform apply -var total_workers=3
 
 docker node ls # list nodes
-docker node promote <node> # promote some nodes as manager in case of changing ip address of main node
+docker node promote <node> # promote more than 2 nodes as managers in case of changing ip address of main node
 ```
 
 ### Teardown external nodes

@@ -1,5 +1,6 @@
 /tmp
 /lib
+/keys
 __nock-fixtures__
 .env
 .envrc
