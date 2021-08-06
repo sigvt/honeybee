@@ -19,6 +19,7 @@ export interface Stats {
 export enum ErrorCode {
   MembershipOnly,
   UnknownError,
+  Ban,
 }
 
 export interface Result {
@@ -28,13 +29,6 @@ export interface Result {
 
 const SHUTDOWN_TIMEOUT = 30 * 1000;
 const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 1);
-
-function msecToMin(msec: number) {
-  return Math.floor(msec / 1000 / 60);
-}
-function minToMsec(min: number) {
-  return Math.ceil(min * 60 * 1000);
-}
 
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const { videoId } = job.data;
@@ -52,8 +46,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     job.reportProgress(stats);
   }
 
-  // warming up (0 to 30 sec)
-  const warmUpDuration = Math.floor(Math.random() * 1000 * 30);
+  // warming up (0 to 120 sec)
+  const warmUpDuration = Math.floor(Math.random() * 1000 * 120);
   videoLog(
     `waiting for ${Math.ceil(warmUpDuration / 1000)} seconds before proceeding`
   );
@@ -66,13 +60,24 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   stats.isWarmingUp = false;
   job.reportProgress(stats);
 
-  const context = await fetchContext(videoId);
+  let context;
+  try {
+    context = await fetchContext(videoId);
+  } catch (err) {
+    if (err.name === "EYTBAN") {
+      videoLog("429 detected");
+      return { error: ErrorCode.Ban };
+    }
+  }
+
   if (!context) {
-    videoLog("no context", new Date());
-    videoLog("https://www.youtube.com/watch?v=" + videoId);
-    const ytbanError = new Error("YTBAN");
-    ytbanError.name = "YTBAN";
-    throw ytbanError;
+    videoLog(
+      "no context",
+      new Date(),
+      "https://www.youtube.com/watch?v=" + videoId
+    );
+    // already turned into membership-only stream
+    return { error: ErrorCode.MembershipOnly };
   }
 
   const { metadata, chat, apiKey } = context;

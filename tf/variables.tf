@@ -1,8 +1,8 @@
-variable "region" {
+variable "do_region" {
   default = "sfo3"
 }
 
-variable "total_workers" {
+variable "do_total_workers" {
   description = "# of workers"
   default     = 1
 }
@@ -11,10 +11,19 @@ variable "do_token" {
   description = "DigitalOcean API token"
 }
 
-variable "ssh_keys" {
+variable "do_ssh_keys" {
   type = list(string)
 }
 
-variable "provision_ssh_key" {
+variable "vultr_token" {
+  description = "Vultr API token"
+}
+
+variable "vultr_total_workers" {
+  description = "# of workers"
+  default     = 1
+}
+
+variable "provision_key_path" {
   default = "~/.ssh/id_ed25519"
 }

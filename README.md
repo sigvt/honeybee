@@ -58,6 +58,7 @@ docker node promote <node> # promote more than 2 nodes as managers in case of ch
 ### Teardown external nodes
 
 ```bash
+docker node rm -f <node>
 cd tf
 terraform destroy
 ```

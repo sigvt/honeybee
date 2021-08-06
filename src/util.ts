@@ -1,4 +1,5 @@
 import { appendFileSync, writeFileSync } from "fs";
+import fetch, { FetchError, RequestInfo, RequestInit } from "node-fetch";
 import { join } from "path";
 
 interface Record {
@@ -100,4 +101,40 @@ export function groupBy<T, K extends keyof T, S extends Extract<T[K], string>>(
     result[index].push(o as any);
     return result;
   }, {} as { [k in S]: (T extends { [s in K]: k } ? T : never)[] });
+}
+
+export type RequestInitWithRetryOption = RequestInit & {
+  retry?: number;
+  retryInterval?: number;
+};
+export interface FetchWithRetryError extends FetchError {
+  errors: FetchError[];
+}
+export async function fetchWithRetry(
+  url: RequestInfo,
+  init?: RequestInitWithRetryOption
+) {
+  const errors = [];
+
+  let remaining = init?.retry ?? 0;
+  const retryInterval = init?.retryInterval ?? 5000;
+
+  while (true) {
+    try {
+      return fetch(url, init);
+    } catch (err) {
+      if (err.name === "AbortError") throw err;
+
+      errors.push(err);
+
+      if (remaining > 0) {
+        await timeoutThen(retryInterval);
+        remaining -= 1;
+        continue;
+      }
+
+      err.errors = errors;
+      throw err;
+    }
+  }
 }

@@ -44,12 +44,12 @@ export async function runScheduler() {
       ? new Date(scheduledStartTime).getTime() - Date.now()
       : 0;
     const startsInMin = Math.floor(startUntil / 1000 / 60);
-    if (startsInMin < -10080 && !guessFreeChat(title)) {
-      // schedulerLog(
-      //   `${videoId} (${title}) will be ignored. it was started in ${startsInMin} min and not a free chat, which must be strayed stream.`
-      // );
-      return;
-    }
+    // if (startsInMin < -10080 && !guessFreeChat(title)) {
+    //   schedulerLog(
+    //     `${videoId} (${title}) will be ignored. it was started in ${startsInMin} min and not a free chat, which must be abandoned.`
+    //   );
+    //   return;
+    // }
 
     // if failed to receive chat:
     // prechat -> retry after max(1m, 1/3 of startUntil) for 3 times
@@ -75,12 +75,17 @@ export async function runScheduler() {
     await timeoutThen(3 * 1000);
   }
 
+  async function checkStalledJobs() {
+    const res = await queue.checkStalledJobs();
+    if (res > 0) {
+      console.log("enqueue stalled jobs:", res);
+    }
+  }
+
   async function rearrange(invokedAt: Date) {
     assert(HOLODEX_API_KEY);
 
     schedulerLog("@@@@@@@@ updating index", invokedAt);
-
-    await queue.checkStalledJobs();
 
     const alreadyActiveJobs = (
       await queue.getJobs("active", { start: 0, end: 300 })
@@ -133,14 +138,14 @@ Delayed=${health.delayed}`
     console.log(`SUGGESTED WORKER COUNT: ${totalWorkers}`);
   }
 
+  queue.on("stalled", (jobId) => {
+    schedulerLog("[stalled]:", jobId);
+  });
+
   // redis related error
   queue.on("error", (err) => {
     schedulerLog(`${err.message}`);
     process.exit(1);
-  });
-
-  queue.on("stalled", (jobId) => {
-    schedulerLog("[stalled]:", jobId);
   });
 
   queue.on("job succeeded", async (jobId, result: Result) => {
@@ -151,21 +156,31 @@ Delayed=${health.delayed}`
     switch (result.error) {
       case ErrorCode.MembershipOnly: {
         // do not remove id from cache so that the scheduler can ignore the stream.
+        await job.remove();
+        schedulerLog("[job succeeded]:", `removed ${jobId} from job queue`);
         break;
       }
-      default: {
+      case ErrorCode.Ban: {
+        // handle ban
+        handledVideoIdCache.delete(job.data.videoId);
+        await job.remove();
+        schedulerLog(
+          "[job cancelled]:",
+          `removed ${jobId} from handled id cache due to yt ban`
+        );
+        break;
+      }
+      case ErrorCode.UnknownError: {
         // live stream is still ongoing but somehow got response with empty continuation hence mistaken as being finished -> will be added in next invocation. If the stream was actually ended that's ok bc the stream index won't have that stream anymore, or else it will be added to worker again.
         // live stream was over and the result is finalized -> the index won't have that videoId anymore so it's safe to remove them from the cache
         handledVideoIdCache.delete(job.data.videoId);
+        await job.remove();
         schedulerLog(
           "[job succeeded]:",
           `removed ${jobId} from handled id cache`
         );
       }
     }
-
-    await job.remove();
-    schedulerLog("[job succeeded]:", `removed ${jobId} from job queue`);
   });
 
   queue.on("job retrying", async (jobId, err) => {
@@ -173,21 +188,12 @@ Delayed=${health.delayed}`
     const retries = job.options.retries;
     const retryDelay = job.options.backoff.delay;
 
-    if (err.message.includes("innertubeApiKey")) {
-      handledVideoIdCache.delete(job.data.videoId);
-      await job.remove();
-      schedulerLog(
-        "[job retrying]:",
-        `looks like ip ban. cancelled retry and immediately removed ${jobId} from cache and job queue`
-      );
-    } else {
-      schedulerLog(
-        "[job retrying]:",
-        `will retry ${jobId} in ${Math.ceil(
-          retryDelay / 1000 / 60
-        )} minutes (${retries}). cause: ${err.message}`
-      );
-    }
+    schedulerLog(
+      "[job retrying]:",
+      `will retry ${jobId} in ${Math.ceil(
+        retryDelay / 1000 / 60
+      )} minutes (${retries}). cause: ${err.message}`
+    );
   });
 
   queue.on("job failed", async (jobId, err) => {
@@ -210,9 +216,10 @@ Delayed=${health.delayed}`
 
     handledVideoIdCache.clear();
 
-    const scheduler = schedule.scheduleJob("*/10 * * * *", rearrange);
+    schedule.scheduleJob("*/10 * * * *", rearrange);
+    schedule.scheduleJob("*/1 * * * *", checkStalledJobs);
 
-    console.log("scheduler has been started:", scheduler.name);
+    console.log("scheduler has been started:");
 
     await rearrange(new Date());
   });

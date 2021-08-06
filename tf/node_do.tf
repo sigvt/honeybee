@@ -1,44 +1,35 @@
 # https://developers.digitalocean.com/documentation/changelog/api-v2/new-size-slugs-for-droplet-plan-changes/
 # https://github.com/thojkooi/terraform-digitalocean-docker-swarm-mode/blob/master/modules/workers/scripts/join.sh
 
-data "http" "selfip" {
-  url = "http://ifconfig.co/"
-}
-
-module "join-token" {
-  source  = "matti/outputs/shell"
-  command = "docker swarm join-token worker -q"
-}
-
 resource "digitalocean_droplet" "node" {
   image  = "docker-20-04"
-  region = var.region
-  count  = var.total_workers
-  name   = format("honeybee-%02d.%s", count.index + 1, var.region)
+  region = var.do_region
+  count  = var.do_total_workers
+  name   = format("honeybee-do-%02d", count.index + 1)
   size   = "s-1vcpu-1gb"
   tags = [
     "honeybee"
   ]
-
-  ssh_keys = var.ssh_keys
+  ssh_keys = var.do_ssh_keys
 
   connection {
     host        = self.ipv4_address
     user        = "root"
     type        = "ssh"
-    private_key = file(var.provision_ssh_key)
+    private_key = file(var.provision_key_path)
     timeout     = "2m"
   }
 
   provisioner "remote-exec" {
     inline = [
       "export PATH=$PATH:/usr/bin",
-      "apt update",
-      "apt --only-upgrade install docker-ce -y",
-      "ufw allow 2377",
-      "ufw allow 7946",
+      "ufw allow 2377/tcp",
+      "ufw allow 7946/tcp",
       "ufw allow 7946/udp",
       "ufw allow 4789/udp",
+      "ufw reload",
+      "apt-get update",
+      "apt-get install docker-ce -y",
       "docker swarm join --token ${module.join-token.stdout} --advertise-addr ${self.ipv4_address} ${chomp(data.http.selfip.body)}"
     ]
   }

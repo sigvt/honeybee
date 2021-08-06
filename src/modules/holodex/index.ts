@@ -1,17 +1,28 @@
-import fetch from "node-fetch";
+import { fetchWithRetry } from "../../util";
 import { HolodexLiveStreamInfo } from "./types";
 
+// there's ~72 constant free-chat rooms
+
+interface FetchLiveStreamsOptions {
+  org?: string;
+  maxUpcomingHours?: number; // 999999 to catch everything
+}
+
 export async function fetchLiveStreams(
-  apiKey: string
+  apiKey: string,
+  { org = "All Vtubers", maxUpcomingHours = 72 }: FetchLiveStreamsOptions = {}
 ): Promise<HolodexLiveStreamInfo[]> {
-  const response = (await fetch(
-    "https://holodex.net/api/v2/live?org=All%20Vtubers",
+  const response = (await fetchWithRetry(
+    `https://holodex.net/api/v2/live?org=${encodeURIComponent(
+      org
+    )}&max_upcoming_hours=${maxUpcomingHours}`,
     {
       method: "GET",
       headers: {
-        "user-agent": "honeybee",
+        "user-agent": "holodata/honeybee",
         "x-apikey": apiKey,
       },
+      retry: 3,
     }
   ).then((res) => res.json())) as HolodexLiveStreamInfo[];
 
