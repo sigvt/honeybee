@@ -103,7 +103,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       // if resolve -> throw back at scheduler
       switch (response.error.status) {
         case FetchChatErrorStatus.LiveChatDisabled: {
-          videoLog("IterError: ContinuationNotFound");
+          videoLog("IterError: LiveChatDisabled");
           // live stream is over
           break chatIteration;
         }
