@@ -10,7 +10,7 @@ interface FetchLiveStreamsOptions {
 
 export async function fetchLiveStreams(
   apiKey: string,
-  { org = "All Vtubers", maxUpcomingHours = 72 }: FetchLiveStreamsOptions = {}
+  { org = "All Vtubers", maxUpcomingHours = 12 }: FetchLiveStreamsOptions = {}
 ): Promise<HolodexLiveStreamInfo[]> {
   const response = (await fetchWithRetry(
     `https://holodex.net/api/v2/live?org=${encodeURIComponent(
