@@ -62,3 +62,7 @@ docker node rm -f <node>
 cd tf
 terraform destroy
 ```
+
+## Contribute
+
+Have ideas to improve the system? Please [open an issue](https://github.com/holodata/honeybee/issues), or join `#honeybee` channel on [holodata Discord](https://holodata.org/discord).
