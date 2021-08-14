@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import yargs from "yargs";
+import { metrics } from "./commands/metrics";
+import { showClusterHealth } from "./commands/showClusterHealth";
 import { migrateChat } from "./commands/migrateChat";
 import { removeDuplicatedActions } from "./commands/removeDuplicatedActions";
-import { showClusterHealth } from "./commands/showClusterHealth";
 import { runScheduler } from "./scheduler";
 import { runWorker } from "./worker";
 
@@ -24,6 +25,7 @@ process.on("SIGINT", (err) => {
 
 yargs(process.argv.slice(2))
   .scriptName("honeybee")
+  .command("metrics", "show cluster metrics", metrics)
   .command("health", "show cluster health", showClusterHealth)
   .command("cleanupDupes", "remove duplicated actions", removeDuplicatedActions)
   .command("migrateChat", "migrate datetime format", migrateChat)
