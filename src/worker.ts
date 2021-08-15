@@ -102,6 +102,9 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   videoLog(`start processing live chats`);
 
+  // change delay backoff time to 3 min
+  job.backoff("fixed", 3 * 60 * 1000);
+
   const liveChatIteratorOptions = {
     token: chat.continuations.all.token,
     apiKey,
