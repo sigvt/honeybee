@@ -25,7 +25,7 @@ process.on("SIGINT", (err) => {
 
 yargs(process.argv.slice(2))
   .scriptName("honeybee")
-  .command("metrics", "show cluster metrics", metrics)
+  .command("metrics", "metrics endpoint for Telegraf", metrics)
   .command("health", "show cluster health", showClusterHealth)
   .command("cleanupDupes", "remove duplicated actions", removeDuplicatedActions)
   .command("migrateChat", "migrate datetime format", migrateChat)
