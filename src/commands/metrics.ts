@@ -51,9 +51,9 @@ export async function metrics() {
     process.exit(0);
   });
 
-  process.stdin.on("readable", async () => {
+  process.stdin.on("readable", () => {
     while (process.stdin.read() !== null) {
-      await printMetrics();
+      printMetrics();
     }
   });
 }

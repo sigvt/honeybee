@@ -68,6 +68,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       videoLog("429 detected");
       return { error: ErrorCode.Ban };
     }
+    throw err;
   }
 
   if (!context) {
