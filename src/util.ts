@@ -110,7 +110,7 @@ export type RequestInitWithRetryOption = RequestInit & {
 export interface FetchWithRetryError extends FetchError {
   errors: FetchError[];
 }
-export async function fetchWithRetry(
+export async function fetchJsonWithRetry(
   url: RequestInfo,
   init?: RequestInitWithRetryOption
 ) {
@@ -121,7 +121,8 @@ export async function fetchWithRetry(
 
   while (true) {
     try {
-      return fetch(url, init);
+      const res = await fetch(url, init);
+      return await res.json();
     } catch (err) {
       if (err.name === "AbortError") throw err;
 

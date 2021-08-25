@@ -46,14 +46,14 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     job.reportProgress(stats);
   }
 
-  // warming up (0 to 120 sec)
-  const warmUpDuration = Math.floor(Math.random() * 1000 * 120);
+  // warming up (0 to 60 sec)
+  const warmUpDuration = Math.floor(Math.random() * 1000 * 60);
   videoLog(
     `waiting for ${Math.ceil(warmUpDuration / 1000)} seconds before proceeding`
   );
   const interval = setInterval(() => {
     job.reportProgress(stats);
-  }, 1000);
+  }, 5000);
   await timeoutThen(warmUpDuration);
   clearInterval(interval);
 
@@ -103,8 +103,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
   videoLog(`start processing live chats`);
 
-  // change delay backoff time to 3 min
-  job.backoff("fixed", 3 * 60 * 1000);
+  // change delay backoff time to 1 min
+  job.backoff("fixed", 1 * 60 * 1000);
 
   const liveChatIteratorOptions = {
     token: chat.continuations.all.token,
@@ -298,20 +298,10 @@ export async function runWorker() {
   // Redis related error
   queue.on("error", (err) => {
     // code: 'EHOSTUNREACH'
-    console.log(queue.jobs);
-    console.log("queue got error (will terminate):", err);
+    // code: 'UNCERTAIN_STATE'
+    console.log("queue got error:", (err as any)?.code, err.message);
     process.exit(1);
   });
-
-  // it's the queue instance that happened to detect the stalled job.
-  // queue.on("stalled", (jobId) => {
-  //   workerLog(`detected stalled job ${jobId} `);
-  // });
-
-  // Job related error
-  // queue.on("failed", (job, err) => {
-  //   workerLog(`while handling ${job.id} got ${err.message}`);
-  // });
 
   queue.process<Result>(JOB_CONCURRENCY, handleJob);
 }

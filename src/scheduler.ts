@@ -35,10 +35,16 @@ export async function runScheduler() {
     const title = stream.title;
     const scheduledStartTime = stream.start_scheduled;
 
-    if (handledVideoIdCache.has(videoId)) return;
+    if (handledVideoIdCache.has(videoId)) {
+      schedulerLog(`ignored ${videoId} (${title}) as it is already in cache`);
+      return;
+    }
 
     // filter out freechat
-    if (IGNORE_FREE_CHAT && guessFreeChat(title)) return;
+    if (IGNORE_FREE_CHAT && guessFreeChat(title)) {
+      schedulerLog(`ignored ${videoId} (${title}) as it is freechat`);
+      return;
+    }
 
     const startUntil = scheduledStartTime
       ? new Date(scheduledStartTime).getTime() - Date.now()
@@ -51,18 +57,19 @@ export async function runScheduler() {
     //   return;
     // }
 
-    // if failed to receive chat:
-    // prechat -> retry after max(1m, 1/3 of startUntil) for 3 times
-    // livechat -> retry after 5m for 3 times
-    // but not longer than 30 minutes
-    const estimatedDelay = Math.min(
-      Math.max(Math.floor(startUntil / 3), 5 * 60 * 1000),
-      30 * 60 * 1000
+    // if failed to obtain chat:
+    // startUntil > 0 (pre)     -> retry after max(1/5 of startUntil, 1min) for 5 times
+    // startUntil < 0 (ongoing) -> retry after 1m for 5 times
+    const minimumWaits = 1;
+    const divisor = 10;
+    const estimatedDelay = Math.max(
+      Math.floor(startUntil / divisor),
+      1000 * 60 * minimumWaits
     );
     await queue
       .createJob({ videoId, stream })
       .setId(videoId)
-      .retries(3)
+      .retries(divisor - 1)
       .backoff("fixed", estimatedDelay)
       .save();
 

@@ -15,15 +15,18 @@ export async function metrics() {
     const superchat = await SuperChat.estimatedDocumentCount();
     const ban = await BanAction.estimatedDocumentCount();
     const deletion = await DeleteAction.estimatedDocumentCount();
+
     const { active, waiting, delayed, failed, succeeded } =
       await queue.checkHealth();
+
     const activeJobs = await queue.getJobs("active", { start: 0, end: 300 });
-    let nbWarmingUp = 0;
+
+    let warmingUp = 0;
     for (const job of activeJobs) {
       const progress: Stats = job.progress;
-      if (progress.isWarmingUp) nbWarmingUp += 1;
+      if (progress.isWarmingUp) warmingUp += 1;
     }
-    const realActive = active - nbWarmingUp;
+    const realActive = active - warmingUp;
 
     const metrics = {
       chat,
@@ -31,7 +34,7 @@ export async function metrics() {
       ban,
       deletion,
       active: realActive,
-      warmingUp: nbWarmingUp,
+      warmingUp,
       waiting,
       delayed,
       failed,
@@ -44,6 +47,25 @@ export async function metrics() {
         .join(" ")
     );
   }
+
+  // const lastId = await DeleteAction.findOne({}, { _id: 1 }).sort({
+  //   $natural: -1,
+  // });
+  // const stream = DeleteAction.find(
+  //   { _id: { $gt: lastId._id } },
+  //   { originChannelId: 1 },
+  //   {
+  //     tailable: true,
+  //     numberOfRetries: -1,
+  //   }
+  // )
+  //   .sort({ $natural: 1 })
+  //   .limit(1)
+  //   .cursor();
+
+  // stream.on("data", (data: any) => {
+  //   console.log(data);
+  // });
 
   process.on("SIGINT", async () => {
     await queue.close();

@@ -6,7 +6,7 @@ terraform init -upgrade
 terraform apply
 ```
 
-## Setup Vultra instance
+## Setup Vultr instance
 
 ```bash
 ufw allow ssh
