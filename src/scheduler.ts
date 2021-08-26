@@ -35,17 +35,6 @@ export async function runScheduler() {
     const title = stream.title;
     const scheduledStartTime = stream.start_scheduled;
 
-    if (handledVideoIdCache.has(videoId)) {
-      schedulerLog(`ignored ${videoId} (${title}) as it is already in cache`);
-      return;
-    }
-
-    // filter out freechat
-    if (IGNORE_FREE_CHAT && guessFreeChat(title)) {
-      schedulerLog(`ignored ${videoId} (${title}) as it is freechat`);
-      return;
-    }
-
     const startUntil = scheduledStartTime
       ? new Date(scheduledStartTime).getTime() - Date.now()
       : 0;
@@ -56,6 +45,21 @@ export async function runScheduler() {
     //   );
     //   return;
     // }
+
+    if (handledVideoIdCache.has(videoId)) {
+      schedulerLog(
+        `ignored ${videoId} (${title}) [${startsInMin}] as it is either being delayed / members-only`
+      );
+      return;
+    }
+
+    // filter out freechat
+    if (IGNORE_FREE_CHAT && guessFreeChat(title)) {
+      schedulerLog(
+        `ignored ${videoId} (${title}) [${startsInMin}] as it is freechat`
+      );
+      return;
+    }
 
     // if failed to obtain chat:
     // startUntil > 0 (pre)     -> retry after max(1/5 of startUntil, 1min) for 5 times
@@ -74,7 +78,7 @@ export async function runScheduler() {
       .save();
 
     schedulerLog(
-      `scheduled ${videoId} (${title}) starting in ${startsInMin} minutes`
+      `scheduled ${videoId} (${title}) starts in ${startsInMin} minute(s)`
     );
 
     handledVideoIdCache.add(videoId);
@@ -161,7 +165,7 @@ Delayed=${health.delayed}`
     schedulerLog("[job succeeded]:", jobId, result);
 
     switch (result.error) {
-      case ErrorCode.MembershipOnly: {
+      case ErrorCode.MembersOnly: {
         // do not remove id from cache so that the scheduler can ignore the stream.
         await job.remove();
         schedulerLog("[job succeeded]:", `removed ${jobId} from job queue`);

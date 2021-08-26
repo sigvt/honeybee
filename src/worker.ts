@@ -17,9 +17,9 @@ export interface Stats {
 }
 
 export enum ErrorCode {
-  MembershipOnly,
-  UnknownError,
-  Ban,
+  MembersOnly = "MEMBERS_ONLY",
+  UnknownError = "UNKNOWN",
+  Ban = "BAN",
 }
 
 export interface Result {
@@ -78,7 +78,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       "https://www.youtube.com/watch?v=" + videoId
     );
     // already turned into membership-only stream
-    return { error: ErrorCode.MembershipOnly };
+    return { error: ErrorCode.MembersOnly };
   }
 
   const { metadata, chat, apiKey } = context;
@@ -86,7 +86,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   // check if the video is valid
   if (!metadata) {
     videoLog(`membership only stream`);
-    return { error: ErrorCode.MembershipOnly };
+    return { error: ErrorCode.MembersOnly };
   }
 
   const { isLive } = metadata;
