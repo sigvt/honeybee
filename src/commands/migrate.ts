@@ -39,7 +39,7 @@ export const SUPERCHAT_SIGNIFICANCE_MAP = {
   red: 7,
 } as const;
 
-export async function migrateChat(argv: any) {
+export async function migrate(argv: any) {
   console.log("connecting");
   const disconnect = await initMongo();
 

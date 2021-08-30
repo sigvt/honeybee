@@ -10,9 +10,8 @@ terraform apply
 
 ```bash
 ufw allow ssh
-ufw allow 2377
+ufw allow 2377/tcp
 ufw allow 7946
-ufw allow 7946/udp
 ufw allow 4789/udp
 ufw --force enable
 apt-get install apt-transport-https ca-certificates curl gnupg lsb-release -y

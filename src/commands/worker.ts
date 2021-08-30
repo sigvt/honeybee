@@ -1,34 +1,16 @@
 import BeeQueue from "bee-queue";
-import BanAction from "./models/BanAction";
-import Chat from "./models/Chat";
-import DeleteAction from "./models/DeleteAction";
-import { initMongo } from "./modules/db";
-import { getQueueInstance, Job } from "./modules/queue";
-import { groupBy, timeoutThen } from "./util";
-import SuperChat from "./models/SuperChat";
 import { fetchContext, iterateChat } from "masterchat";
-import { YTChatErrorStatus } from "masterchat/lib/types/chat";
 import { Action, FetchChatErrorStatus } from "masterchat/lib/chat";
-
-export interface Stats {
-  handled: number;
-  errors: number;
-  isWarmingUp: boolean;
-}
-
-export enum ErrorCode {
-  MembersOnly = "MEMBERS_ONLY",
-  UnknownError = "UNKNOWN",
-  Ban = "BAN",
-}
-
-export interface Result {
-  error: ErrorCode | null;
-  result?: Stats;
-}
-
-const SHUTDOWN_TIMEOUT = 30 * 1000;
-const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY || 1);
+import { YTChatErrorStatus } from "masterchat/lib/types/chat";
+import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
+import { ErrorCode, Result, Stats } from "../interfaces";
+import BanAction from "../models/BanAction";
+import Chat from "../models/Chat";
+import DeleteAction from "../models/DeleteAction";
+import SuperChat from "../models/SuperChat";
+import { initMongo } from "../modules/db";
+import { getQueueInstance, Job } from "../modules/queue";
+import { groupBy, timeoutThen } from "../util";
 
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const { videoId } = job.data;

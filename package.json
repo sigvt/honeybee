@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
   "scripts": {
-    "build": "tsc && shx chmod +x lib/cli.js",
+    "build": "tsc && shx chmod +x lib/index.js",
     "clean": "shx rm -rf lib",
     "dev": "tsc -w",
     "prepublishOnly": "npm run clean && npm run build",
@@ -13,8 +13,8 @@
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "bin": {
-    "honeybee": "lib/cli.js",
-    "hb": "lib/cli.js"
+    "honeybee": "lib/index.js",
+    "hb": "lib/index.js"
   },
   "files": [
     "lib"
@@ -25,6 +25,7 @@
     "chalk": "^4.1.1",
     "cli-color": "^2.0.0",
     "clui": "^0.3.6",
+    "execa": "^5.1.1",
     "masterchat": "0.6.0",
     "mongoose": "5.10.18",
     "node-fetch": "^2.6.1",

@@ -1,21 +1,24 @@
-import schedule from "node-schedule";
-import { fetchLiveStreams } from "./modules/holodex";
-import { HolodexLiveStreamInfo } from "./modules/holodex/types";
-import { getQueueInstance } from "./modules/queue";
-import { guessFreeChat, timeoutThen } from "./util";
-import { ErrorCode, Result, Stats } from "./worker";
 import assert from "assert";
-
-const SHUTDOWN_TIMEOUT = 30 * 1000;
-const IGNORE_FREE_CHAT = process.env.IGNORE_FREE_CHAT ?? false;
-const JOB_CONCURRENCY = Number(process.env.JOB_CONCURRENCY ?? 1);
-const HOLODEX_API_KEY = process.env.HOLODEX_API_KEY;
+import schedule from "node-schedule";
+import {
+  HOLODEX_API_KEY,
+  IGNORE_FREE_CHAT,
+  JOB_CONCURRENCY,
+  SHUTDOWN_TIMEOUT,
+} from "../constants";
+import { ErrorCode, Result, Stats } from "../interfaces";
+import { fetchLiveStreams } from "../modules/holodex";
+import { HolodexLiveStreamInfo } from "../modules/holodex/types";
+import { getQueueInstance } from "../modules/queue";
+import { guessFreeChat, timeoutThen } from "../util";
 
 function schedulerLog(...obj: any) {
   console.log(...obj);
 }
 
 export async function runScheduler() {
+  assert(HOLODEX_API_KEY);
+
   const queue = getQueueInstance({ isWorker: false });
   const handledVideoIdCache: Set<string> = new Set();
 
@@ -94,15 +97,13 @@ export async function runScheduler() {
   }
 
   async function rearrange(invokedAt: Date) {
-    assert(HOLODEX_API_KEY);
-
     schedulerLog("@@@@@@@@ updating index", invokedAt);
 
     const alreadyActiveJobs = (
       await queue.getJobs("active", { start: 0, end: 300 })
     ).map((job) => job.data.videoId);
 
-    const liveAndUpcomingStreams = await fetchLiveStreams(HOLODEX_API_KEY);
+    const liveAndUpcomingStreams = await fetchLiveStreams(HOLODEX_API_KEY!);
 
     const unscheduledStreams = liveAndUpcomingStreams.filter(
       (stream) => !alreadyActiveJobs.includes(stream.id)
@@ -141,12 +142,6 @@ WarmingUp=${nbWarmingUp}
 Waiting=${health.waiting}
 Delayed=${health.delayed}`
     );
-
-    // TODO: auto scale worker nodes
-    const totalJobs = health.active + health.delayed + health.waiting;
-    const totalWorkers = Math.ceil(totalJobs / JOB_CONCURRENCY);
-    // terraform apply -var total_workers=${totalWorkers}
-    console.log(`SUGGESTED WORKER COUNT: ${totalWorkers}`);
   }
 
   queue.on("stalled", (jobId) => {
@@ -223,14 +218,12 @@ Delayed=${health.delayed}`
   });
 
   queue.on("ready", async () => {
-    console.log(`starting scheduler (concurrency: ${JOB_CONCURRENCY})`);
+    console.log(`scheduler has been started (concurrency: ${JOB_CONCURRENCY})`);
 
     handledVideoIdCache.clear();
 
     schedule.scheduleJob("*/10 * * * *", rearrange);
     schedule.scheduleJob("*/1 * * * *", checkStalledJobs);
-
-    console.log("scheduler has been started:");
 
     await rearrange(new Date());
   });

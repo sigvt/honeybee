@@ -1,5 +1,5 @@
-import { initMongo } from "../modules/db";
 import BanAction from "../models/BanAction";
+import { initMongo } from "../modules/db";
 
 export async function removeDuplicatedActions(argv: any) {
   const disconnect = await initMongo();

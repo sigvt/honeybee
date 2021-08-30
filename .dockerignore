@@ -4,9 +4,13 @@
 /node_modules
 /data
 /notes
-/tf
 *.jsonl
 __nock-fixtures__
 .env
 .envrc
 *.log
+crash.log
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*

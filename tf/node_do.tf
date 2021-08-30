@@ -23,14 +23,12 @@ resource "digitalocean_droplet" "node" {
   provisioner "remote-exec" {
     inline = [
       "export PATH=$PATH:/usr/bin",
-      "ufw allow 2377/tcp",
-      "ufw allow 7946/tcp",
-      "ufw allow 7946/udp",
-      "ufw allow 4789/udp",
-      "ufw reload",
       "apt-get update",
       "apt-get install docker-ce -y",
-      "docker swarm join --token ${module.join-token.stdout} --advertise-addr ${self.ipv4_address} ${chomp(data.http.selfip.body)}"
+      "ufw allow 2377/tcp",
+      "ufw allow 7946",
+      "ufw allow 4789/udp",
+      "docker swarm join --token ${module.join-token.stdout} --advertise-addr ${self.ipv4_address} ${chomp(data.http.selfip.body)}:2377"
     ]
   }
 

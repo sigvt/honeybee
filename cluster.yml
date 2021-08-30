@@ -31,6 +31,29 @@ services:
       restart_policy:
         condition: on-failure
 
+  manager:
+    image: ${HONEYBEE_IMAGE}
+    command: honeybee manager
+    environment:
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY}
+      PERM_WORKERS: ${PERM_WORKERS}
+      TF_PROJECT_ROOT: /app/tf
+      TF_VAR_do_token: ${TF_VAR_do_token}
+      TF_VAR_do_ssh_keys: ${TF_VAR_do_ssh_keys}
+      TF_VAR_provision_key_path: /tfKey
+    volumes:
+      - ${TF_PROVISION_KEY_PATH}:/tfKey:ro
+    depends_on:
+      - redis
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${MAIN_NODE_HOSTNAME}
+      restart_policy:
+        condition: on-failure
+
   scheduler:
     image: ${HONEYBEE_IMAGE}
     command: honeybee scheduler
