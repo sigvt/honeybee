@@ -32,6 +32,7 @@ resource "digitalocean_droplet" "node" {
     ]
   }
 
+  # TODO: fix this
   # provisioner "remote-exec" {
   #   when = destroy
 
@@ -43,7 +44,6 @@ resource "digitalocean_droplet" "node" {
   # }
 }
 
-# TODO: remove this
 resource "digitalocean_firewall" "node" {
   name = "docker-swarm"
 
