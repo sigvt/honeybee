@@ -11,6 +11,8 @@ import SuperChat from "../models/SuperChat";
 import { initMongo } from "../modules/db";
 import { getQueueInstance, Job } from "../modules/queue";
 import { groupBy, timeoutThen } from "../util";
+import { MongoError, MongoBulkWriteError } from "mongodb";
+import { FetchError } from "node-fetch";
 
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const { videoId } = job.data;
@@ -46,7 +48,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   try {
     context = await fetchContext(videoId);
   } catch (err) {
-    if (err.name === "EYTBAN") {
+    if (err instanceof Error && err.name === "EYTBAN") {
       videoLog("429 detected");
       return { error: ErrorCode.Ban };
     }
@@ -219,19 +221,25 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           // writeErrors: WriteError
           // code: number
           stats.errors += 1;
-          if (err.code === 11000) {
-            videoLog(
-              `some chats were dupes and ignored while ${err.insertedDocs.length} chat(s) inserted (${err.code})`
-            );
-          } else {
+
+          if (err instanceof MongoError) {
+            if (err.code === 11000) {
+              videoLog(
+                `some chats were dupes and ignored while ${
+                  (err as any).insertedDocs.length
+                } chat(s) inserted (${err.code})`
+              );
+            } else {
+              videoLog(
+                `unrecognized mongo error: code=${err.code} msg=${err.errmsg} labels=${err.errorLabels}`
+              );
+            }
+          } else if (err instanceof FetchError) {
             // getaddrinfo ENOTFOUND mongo
-            videoLog(
-              "unrecognized error",
-              err.type,
-              err.code,
-              err.errno,
-              err.message
-            );
+            videoLog("fetch error", err.type, err.code, err.errno, err.message);
+            throw err;
+          } else if (err instanceof Error) {
+            videoLog("unrecognized error", err.name, err.message);
             throw err;
           }
         }
