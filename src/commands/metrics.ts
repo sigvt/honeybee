@@ -4,14 +4,14 @@ import DeleteAction from "../models/DeleteAction";
 import SuperChat from "../models/SuperChat";
 import { initMongo } from "../modules/db";
 import { getQueueInstance } from "../modules/queue";
-import { channels } from "../data/channels";
 import { groupBy } from "../util";
 import { CURRENCY_TO_TLS_MAP } from "../data/currency";
 import { Stats } from "../interfaces";
+import { fetchChannel } from "../modules/holodex";
 
 // https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/
 
-const INFLUX_MEASUREMENT = "honeybee";
+const INFLUX_MEASUREMENT_NAME = "honeybee";
 
 const lastIdMap = new Map<string, string>();
 
@@ -20,10 +20,18 @@ interface InfluxPayload {
   tags?: { [key: string]: string | number };
 }
 
-type AggregatorModule = (records: any, key: string) => Generator<InfluxPayload>;
+type AggregatorModule = (
+  records: any,
+  key: string
+) => AsyncGenerator<InfluxPayload>;
+
+async function getChannelName(cid: string) {
+  const channel = await fetchChannel(cid);
+  return channel.english_name || channel.name;
+}
 
 function normalize(input: string): string {
-  return input.replace(/[".,'-/]/g, "").replace(/\s/g, "-");
+  return input.replace(/[".,'’/\-]/g, "").replace(/\s/g, "-");
 }
 
 async function printInfluxLog({ fields, tags = {} }: InfluxPayload) {
@@ -46,29 +54,29 @@ async function printInfluxLog({ fields, tags = {} }: InfluxPayload) {
     .join(",");
   const timestamp = Date.now() * 1000 ** 2;
   console.log(
-    `${INFLUX_MEASUREMENT}${
+    `${INFLUX_MEASUREMENT_NAME}${
       tagSet.length > 0 ? "," : ""
     }${tagSet} ${fieldSet} ${timestamp}`
   );
 }
 
-function* groupByChannel(records: any, key: string): Generator<InfluxPayload> {
+async function* groupByChannel(
+  records: any,
+  key: string
+): AsyncGenerator<InfluxPayload> {
   const groups = groupBy<any, any, any>(records, "originChannelId");
   for (const [chId, records] of Object.entries(groups)) {
-    const channel = channels[chId];
-    const channelName = channel ? channel["name.en"].toLowerCase() : chId;
-    const affiliation = channel ? channel.affiliation.toLowerCase() : undefined;
+    const channel = (await getChannelName(chId)).toLowerCase();
     yield {
       fields: { [key]: records.length },
       tags: {
-        channel: channelName,
-        ...(affiliation ? { affiliation } : undefined),
+        channel,
       },
     };
   }
 }
 
-function* groupByCountry(records: any, key: string) {
+async function* groupByCountry(records: any, key: string) {
   const groups = groupBy<any, any, any>(records, "currency");
   for (const [currency, records] of Object.entries(groups)) {
     const country = CURRENCY_TO_TLS_MAP[currency];
@@ -110,7 +118,7 @@ async function logCounts(
   );
 
   if (records.length > 0) {
-    for (const payload of agg(records, key)) {
+    for await (const payload of agg(records, key)) {
       printInfluxLog(payload);
     }
     lastIdMap.set(key, records[records.length - 1]._id);
@@ -122,9 +130,6 @@ export async function metrics() {
   const queue = getQueueInstance({ isWorker: false });
 
   async function printMetrics() {
-    // const chat = await Chat.estimatedDocumentCount();
-    // const superchat = await SuperChat.estimatedDocumentCount();
-
     await logCounts("deletion", DeleteAction, {
       criteria: { retracted: false },
     });

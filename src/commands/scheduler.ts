@@ -103,7 +103,7 @@ export async function runScheduler() {
       await queue.getJobs("active", { start: 0, end: 300 })
     ).map((job) => job.data.videoId);
 
-    const liveAndUpcomingStreams = await fetchLiveStreams(HOLODEX_API_KEY!);
+    const liveAndUpcomingStreams = await fetchLiveStreams();
 
     const unscheduledStreams = liveAndUpcomingStreams.filter(
       (stream) => !alreadyActiveJobs.includes(stream.id)
