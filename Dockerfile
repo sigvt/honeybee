@@ -3,7 +3,7 @@ FROM node:16-alpine
 WORKDIR /app
 
 # terraform
-RUN apk add terraform git
+RUN apk add terraform git ruby
 COPY tf /app/tf
 WORKDIR /app/tf
 RUN terraform init -no-color -input=false

@@ -14,18 +14,21 @@ const PERM_WORKERS = Number(process.env.PERM_WORKERS ?? 0);
 
 async function scaleNodes(totalWorkers: number = 1) {
   const args = [
-    "plan",
+    "apply",
     "-no-color",
     "-input=false",
     "-auto-approve",
     "-var",
     `do_total_workers=${totalWorkers}`,
   ];
+
   const subprocess = execa("terraform", args, {
     shell: true,
     cwd: TF_PROJECT_ROOT,
   });
+
   subprocess.stdout?.pipe(process.stdout);
+
   try {
     await subprocess;
   } catch (err) {
@@ -62,8 +65,10 @@ export async function runManager() {
     console.log(
       `applying new cluster settings: jobs=${totalJobs} required=${requiredWorkers} | perm=${PERM_WORKERS} do=${previousWorkers} -> ${doWorkers}`
     );
-    // TODO: uncomment this when it's ready
-    if (doWorkers !== previousWorkers) await scaleNodes(doWorkers);
+
+    // if (doWorkers !== previousWorkers)
+    await scaleNodes(doWorkers);
+
     previousWorkers = doWorkers;
   }
 
@@ -71,6 +76,6 @@ export async function runManager() {
     console.log(`manager has been started (concurrency: ${JOB_CONCURRENCY})`);
 
     schedule.scheduleJob("10 */1 * * *", rearrange);
-    // await rearrange(new Date());
+    await rearrange(new Date());
   });
 }
