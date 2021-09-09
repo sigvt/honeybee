@@ -3,7 +3,7 @@ version: "3.2"
 services:
   db:
     image: mongo:5
-    command: --wiredTigerCacheSizeGB 10
+    command: --wiredTigerCacheSizeGB 1
     ports:
       - "27017:27017"
     volumes:
