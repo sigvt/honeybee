@@ -156,37 +156,36 @@ Delayed=${health.delayed}`
 
   queue.on("job succeeded", async (jobId, result: Result) => {
     const job = await queue.getJob(jobId);
-
-    schedulerLog("[job succeeded]:", jobId, result);
+    await job.remove();
 
     switch (result.error) {
       case ErrorCode.MembersOnly: {
+        schedulerLog(`[job cancelled (members-only mode)]: ${jobId}`);
         // do not remove id from cache so that the scheduler can ignore the stream.
-        await job.remove();
-        schedulerLog("[job succeeded]:", `removed ${jobId} from job queue`);
-        break;
+        return;
       }
       case ErrorCode.Ban: {
         // handle ban
-        handledVideoIdCache.delete(job.data.videoId);
-        await job.remove();
-        schedulerLog(
-          "[job cancelled]:",
-          `removed ${jobId} from handled id cache due to yt ban`
-        );
+        schedulerLog(`[job aborted (ban)]: ${jobId}`);
         break;
       }
-      case ErrorCode.UnknownError: {
+      case ErrorCode.Unavailable:
+      case ErrorCode.Private: {
         // live stream is still ongoing but somehow got response with empty continuation hence mistaken as being finished -> will be added in next invocation. If the stream was actually ended that's ok bc the stream index won't have that stream anymore, or else it will be added to worker again.
         // live stream was over and the result is finalized -> the index won't have that videoId anymore so it's safe to remove them from the cache
-        handledVideoIdCache.delete(job.data.videoId);
-        await job.remove();
-        schedulerLog(
-          "[job succeeded]:",
-          `removed ${jobId} from handled id cache`
-        );
+        schedulerLog(`[job maybe succeeded]: ${jobId}`);
+        break;
+      }
+      case ErrorCode.Unknown: {
+        schedulerLog(`[action required]: Unknown error occurred at ${jobId}`);
+        break;
+      }
+      default: {
+        schedulerLog(`[job succeeded]: ${jobId}`, result);
       }
     }
+
+    handledVideoIdCache.delete(jobId);
   });
 
   queue.on("job retrying", async (jobId, err) => {
@@ -203,17 +202,16 @@ Delayed=${health.delayed}`
   });
 
   queue.on("job failed", async (jobId, err) => {
-    schedulerLog("[job failed]:", jobId, err.message);
+    schedulerLog(`[job failed]: ${jobId}`, err.message);
 
     const job = await queue.getJob(jobId);
 
     // chances that chat is disabled until live goes online
-    handledVideoIdCache.delete(job.data.videoId);
+    handledVideoIdCache.delete(jobId);
     await queue.removeJob(jobId);
 
     schedulerLog(
-      "[job failed]:",
-      `removed ${job.data.videoId} from cache and job queue for later retry`
+      `[job failed]: removed ${jobId} from cache and job queue for later retry`
     );
   });
 

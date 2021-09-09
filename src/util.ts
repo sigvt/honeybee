@@ -124,7 +124,7 @@ export async function fetchJsonWithRetry(
       const res = await fetch(url, init);
       return await res.json();
     } catch (err) {
-      if (err.name === "AbortError") throw err;
+      if ((err as any).name === "AbortError") throw err;
 
       errors.push(err);
 
@@ -134,7 +134,7 @@ export async function fetchJsonWithRetry(
         continue;
       }
 
-      err.errors = errors;
+      (err as any).errors = errors;
       throw err;
     }
   }

@@ -6,8 +6,10 @@ export interface Stats {
 
 export enum ErrorCode {
   MembersOnly = "MEMBERS_ONLY",
-  UnknownError = "UNKNOWN",
+  Private = "PRIVATE",
+  Unavailable = "UNAVAILABLE",
   Ban = "BAN",
+  Unknown = "UNKNOWN",
 }
 
 export interface Result {

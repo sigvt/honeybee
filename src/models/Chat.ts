@@ -4,8 +4,7 @@ import {
   prop,
   Severity,
 } from "@typegoose/typegoose";
-import { Membership } from "masterchat/lib/chat";
-import { YTRun } from "masterchat/lib/types/chat";
+import { YTRun, Membership } from "masterchat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 class Chat {
