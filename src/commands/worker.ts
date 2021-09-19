@@ -1,6 +1,7 @@
 import BeeQueue from "bee-queue";
-import { Action, Masterchat, MasterchatError } from "masterchat";
-import { MongoError } from "mongodb";
+import { Action, Masterchat, MasterchatError, timeoutThen } from "masterchat";
+import mongo from "mongodb";
+const { MongoError } = mongo;
 import { FetchError } from "node-fetch";
 import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
 import { ErrorCode, Result, Stats } from "../interfaces";
@@ -20,11 +21,11 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     },
   } = job.data;
 
-  const mc = new Masterchat(videoId, channelId);
+  const mc = new Masterchat(videoId, channelId, { isLive: true });
   let stats: Stats = { handled: 0, errors: 0, isWarmingUp: true };
 
   function videoLog(...obj: any) {
-    console.log(`${videoId} -`, ...obj);
+    console.log(`${videoId},${channelId} -`, ...obj);
   }
 
   function refreshStats(actions: Action[]) {
@@ -133,11 +134,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
         if (err instanceof MongoError) {
           if (err.code === 11000) {
-            videoLog(
-              `some chats were dupes and ignored while ${
-                (err as any).insertedDocs.length
-              } chat(s) inserted (${err.code})`
-            );
+            videoLog(`rescued ${(err as any).insertedDocs.length} chat(s)`);
+            continue;
           } else {
             videoLog(
               `unrecognized mongo error: code=${err.code} msg=${err.errmsg} labels=${err.errorLabels}`
@@ -158,22 +156,19 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     refreshStats(actions);
   }
 
-  // warming up (0 to 60 sec)
-  // job.reportProgress(stats);
-  // const warmUpDuration = Math.floor(Math.random() * 1000 * 60);
-  // videoLog(
-  //   `waiting for ${Math.ceil(warmUpDuration / 1000)} seconds before proceeding`
-  // );
-  // const interval = setInterval(() => {
-  //   job.reportProgress(stats);
-  // }, 5000);
-  // await timeoutThen(warmUpDuration);
-  // clearInterval(interval);
+  // wait up to 10 sec (max invalidation timeout) to scatter request timings
+  job.reportProgress(stats);
+  const randomTimeoutMs = Math.floor(Math.random() * 1000 * 10);
+  const interval = setInterval(() => {
+    job.reportProgress(stats);
+  }, 5000);
+  await timeoutThen(randomTimeoutMs);
+  clearInterval(interval);
 
   stats.isWarmingUp = false;
   job.reportProgress(stats);
 
-  videoLog(`start processing live chats`);
+  videoLog(`start processing live chats (${randomTimeoutMs}ms elapsed)`);
 
   // iterate over live chat
   try {
@@ -187,12 +182,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       switch (err.code) {
         case "membersOnly": {
           // let the scheduler ignore this stream from index
-          videoLog(`membership only stream`);
+          videoLog(`members-only stream`);
           return { error: ErrorCode.MembersOnly };
-        }
-        case "disabled": {
-          // immediately fail so that the scheduler can push the job to delayed queue
-          throw new Error("chat is disabled");
         }
         case "denied": {
           return { error: ErrorCode.Ban };
@@ -200,7 +191,14 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         case "unknown": {
           return { error: ErrorCode.Unknown };
         }
-        // TODO: should treat as end of live stream?
+        case "disabled": {
+          // immediately fail so that the scheduler can push the job to delayed queue
+          // TODO: handle when querying archived stream
+          throw new Error(
+            `chat is disabled OR archived stream (start_scheduled: ${job.data.stream.start_scheduled}`
+          );
+        }
+        // TODO: should treat these as an indication of the end of the live stream?
         case "unavailable": {
           videoLog("unavailable");
           break;
@@ -242,7 +240,7 @@ export async function runWorker() {
   });
 
   queue.on("ready", () => {
-    console.log(`starting worker (concurrency: ${JOB_CONCURRENCY})`);
+    console.log(`worker is ready (concurrency: ${JOB_CONCURRENCY})`);
   });
 
   // Redis related error

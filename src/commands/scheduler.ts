@@ -4,6 +4,7 @@ import {
   HOLODEX_API_KEY,
   IGNORE_FREE_CHAT,
   JOB_CONCURRENCY,
+  MAX_UPCOMING_HOURS,
   SHUTDOWN_TIMEOUT,
 } from "../constants";
 import { ErrorCode, Result, Stats } from "../interfaces";
@@ -86,7 +87,7 @@ export async function runScheduler() {
 
     handledVideoIdCache.add(videoId);
 
-    await timeoutThen(3 * 1000);
+    await timeoutThen(500);
   }
 
   async function checkStalledJobs() {
@@ -97,13 +98,16 @@ export async function runScheduler() {
   }
 
   async function rearrange(invokedAt: Date) {
-    schedulerLog("@@@@@@@@ updating index", invokedAt);
+    schedulerLog("[updating index]", invokedAt);
 
     const alreadyActiveJobs = (
       await queue.getJobs("active", { start: 0, end: 300 })
     ).map((job) => job.data.videoId);
 
-    const liveAndUpcomingStreams = await fetchLiveStreams();
+    const liveAndUpcomingStreams = await fetchLiveStreams({
+      maxUpcomingHours: MAX_UPCOMING_HOURS,
+      apiKey: HOLODEX_API_KEY!,
+    });
 
     const unscheduledStreams = liveAndUpcomingStreams.filter(
       (stream) => !alreadyActiveJobs.includes(stream.id)
@@ -135,7 +139,7 @@ export async function runScheduler() {
       if (progress.isWarmingUp) nbWarmingUp += 1;
     }
     console.log(
-      `<| Queue Metrics |>
+      `< Queue Metrics >
 Total=${nbTotal}
 Active=${nbTotal - nbWarmingUp}
 WarmingUp=${nbWarmingUp}
@@ -197,14 +201,12 @@ Delayed=${health.delayed}`
       "[job retrying]:",
       `will retry ${jobId} in ${Math.ceil(
         retryDelay / 1000 / 60
-      )} minutes (${retries}). cause: ${err.message}`
+      )}m (${retries}). reason: ${err.message}`
     );
   });
 
   queue.on("job failed", async (jobId, err) => {
     schedulerLog(`[job failed]: ${jobId}`, err.message);
-
-    const job = await queue.getJob(jobId);
 
     // chances that chat is disabled until live goes online
     handledVideoIdCache.delete(jobId);
@@ -216,13 +218,15 @@ Delayed=${health.delayed}`
   });
 
   queue.on("ready", async () => {
-    console.log(`scheduler has been started (concurrency: ${JOB_CONCURRENCY})`);
+    console.log(
+      `scheduler is ready (concurrency: ${JOB_CONCURRENCY}, max_upcoming_hours=${MAX_UPCOMING_HOURS})`
+    );
 
     handledVideoIdCache.clear();
 
     schedule.scheduleJob("*/10 * * * *", rearrange);
     schedule.scheduleJob("*/1 * * * *", checkStalledJobs);
 
-    await rearrange(new Date());
+    // await rearrange(new Date());
   });
 }

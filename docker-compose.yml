@@ -24,8 +24,10 @@ services:
     environment:
       REDIS_URI: redis://redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY:-3}
+      MAX_UPCOMING_HOURS: ${MAX_UPCOMING_HOURS:-0}
       HOLODEX_API_KEY: ${HOLODEX_API_KEY}
     volumes:
+      - ${DATA_DIR:-./data}/cache:/cache
       - "./lib:/app/lib"
       - "./node_modules:/app/node_modules"
     depends_on:

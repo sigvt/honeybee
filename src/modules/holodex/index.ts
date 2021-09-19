@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
-import { basename, dirname, join } from "path";
-import { HOLODEX_API_KEY, HOLODEX_CACHE_PATH } from "../../constants";
+import { dirname, join } from "path";
+import { HOLODEX_API_KEY, CACHE_PATH } from "../../constants";
 import { fetchJsonWithRetry } from "../../util";
 import { HolodexChannelInfo, HolodexLiveStreamInfo } from "./types";
 
@@ -9,12 +9,14 @@ import { HolodexChannelInfo, HolodexLiveStreamInfo } from "./types";
 interface FetchLiveStreamsOptions {
   org?: string;
   maxUpcomingHours?: number; // 999999 to catch everything
+  apiKey: string;
 }
 
 export async function fetchLiveStreams({
   org = "All Vtubers",
   maxUpcomingHours = 12,
-}: FetchLiveStreamsOptions = {}): Promise<HolodexLiveStreamInfo[]> {
+  apiKey,
+}: FetchLiveStreamsOptions): Promise<HolodexLiveStreamInfo[]> {
   const response = (await fetchJsonWithRetry(
     `https://holodex.net/api/v2/live?org=${encodeURIComponent(
       org
@@ -33,7 +35,7 @@ export async function fetchLiveStreams({
 }
 
 export const fetchChannel = cached(
-  join(HOLODEX_CACHE_PATH, "channelInfo.json"),
+  join(CACHE_PATH, "channelInfo.json"),
   async (channelId: string): Promise<HolodexChannelInfo> => {
     const response = (await fetchJsonWithRetry(
       `https://holodex.net/api/v2/channels/${channelId}`,

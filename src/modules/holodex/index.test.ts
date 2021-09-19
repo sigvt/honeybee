@@ -6,7 +6,7 @@ const record = setupRecorder();
 it("fetchLiveStreams", async () => {
   const { completeRecording } = await record("fetchLiveStreams");
 
-  const res = await fetchLiveStreams();
+  const res = await fetchLiveStreams({ apiKey: "" });
 
   completeRecording();
 

@@ -1,5 +1,6 @@
 import clc from "cli-color";
-import { Line, LineBuffer, Sparkline } from "clui";
+import clui from "clui";
+const { Line, LineBuffer, Sparkline } = clui;
 import { Stats } from "../interfaces";
 import BanAction from "../models/BanAction";
 import Chat from "../models/Chat";

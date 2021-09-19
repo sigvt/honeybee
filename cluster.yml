@@ -61,7 +61,11 @@ services:
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
+      MAX_UPCOMING_HOURS: ${MAX_UPCOMING_HOURS}
       HOLODEX_API_KEY: ${HOLODEX_API_KEY}
+      CACHE_PATH: /cache
+    volumes:
+      - ${DATA_DIR:-./data}/cache:/cache
     depends_on:
       - redis
     deploy:
