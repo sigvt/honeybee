@@ -224,7 +224,7 @@ Delayed=${health.delayed}`
 
     handledVideoIdCache.clear();
 
-    schedule.scheduleJob("*/10 * * * *", rearrange);
+    schedule.scheduleJob("*/5 * * * *", rearrange);
     schedule.scheduleJob("*/1 * * * *", checkStalledJobs);
 
     // await rearrange(new Date());

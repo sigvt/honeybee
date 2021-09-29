@@ -1,6 +1,6 @@
 // from docker environment
-// TF_VAR_do_token
-// TF_VAR_do_ssh_keys
+// TF_VAR_token
+// TF_VAR_ssh_keys
 // TF_VAR_provision_key_path + volume mount
 
 import assert from "assert";
@@ -19,7 +19,7 @@ async function scaleNodes(totalWorkers: number = 1) {
     "-input=false",
     "-auto-approve",
     "-var",
-    `do_total_workers=${totalWorkers}`,
+    `total_workers=${totalWorkers}`,
   ];
 
   const subprocess = execa("terraform", args, {
@@ -73,7 +73,9 @@ export async function runManager() {
   }
 
   queue.on("ready", async () => {
-    console.log(`manager has been started (concurrency: ${JOB_CONCURRENCY})`);
+    console.log(
+      `manager has been started (concurrency: ${JOB_CONCURRENCY}, perm: ${PERM_WORKERS})`
+    );
 
     schedule.scheduleJob("10 */1 * * *", rearrange);
     await rearrange(new Date());

@@ -3,14 +3,14 @@
 
 resource "digitalocean_droplet" "node" {
   image  = "docker-20-04"
-  region = var.do_region
-  count  = var.do_total_workers
+  region = var.region
+  count  = var.total_workers
   name   = format("honeybee-do-%02d", count.index + 1)
   size   = "s-1vcpu-1gb"
   tags = [
     "honeybee"
   ]
-  ssh_keys = var.do_ssh_keys
+  ssh_keys = var.ssh_keys
 
   connection {
     host        = self.ipv4_address

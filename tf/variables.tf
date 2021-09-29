@@ -1,17 +1,17 @@
-variable "do_region" {
+variable "region" {
   default = "sfo3"
 }
 
-variable "do_total_workers" {
+variable "total_workers" {
   description = "# of workers"
   default     = 1
 }
 
-variable "do_token" {
+variable "token" {
   description = "DigitalOcean API token"
 }
 
-variable "do_ssh_keys" {
+variable "ssh_keys" {
   type = list(string)
 }
 

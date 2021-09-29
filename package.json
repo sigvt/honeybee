@@ -3,7 +3,6 @@
   "description": "a distributed YouTube live chat and moderation events collector.",
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
-  "type": "module",
   "scripts": {
     "build": "tsc && shx chmod +x lib/index.js",
     "clean": "shx rm -rf lib",
@@ -11,8 +10,8 @@
     "prepublishOnly": "npm run clean && npm run build",
     "test": "jest"
   },
-  "types": "lib/index.d.ts",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "bin": {
     "honeybee": "lib/index.js",
     "hb": "lib/index.js"
@@ -21,29 +20,30 @@
     "lib"
   ],
   "dependencies": {
-    "@typegoose/typegoose": "^8.3.0",
+    "@typegoose/typegoose": "^9.0.1",
     "bee-queue": "^1.4.0",
     "chalk": "^4.1.2",
     "cli-color": "^2.0.0",
     "clui": "^0.3.6",
     "execa": "^5.1.1",
-    "masterchat": "0.11.0",
-    "mongoose": "~5.13.8",
-    "node-fetch": "^3.0.0",
+    "masterchat": "0.12.0",
+    "mongoose": "~6.0.7",
+    "node-fetch": "^2.0",
     "node-schedule": "^2.0.0",
     "redis": "^3.1.2",
-    "yargs": "^17.1.1"
+    "yargs": "^17.2.1"
   },
   "devDependencies": {
     "@types/cli-color": "^2.0.1",
     "@types/clui": "^0.3.1",
-    "@types/jest": "^27.0.1",
+    "@types/jest": "^27.0.2",
     "@types/mongoose": "^5.10.5",
-    "@types/node": "^16.9.2",
+    "@types/node": "^16.10.1",
+    "@types/node-fetch": "^2.0",
     "@types/node-schedule": "^1.3.2",
     "@types/redis": "^2.8.32",
-    "concurrently": "^6.2.1",
-    "jest": "^27.2.0",
+    "concurrently": "^6.2.2",
+    "jest": "^27.2.3",
     "nock": "^13.1.3",
     "nock-record": "^0.3.9",
     "shx": "^0.3.3",

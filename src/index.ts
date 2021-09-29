@@ -1,5 +1,4 @@
-#!/usr/local/bin/node --experimental-specifier-resolution=node
-// experimental flags cannot be passed with /usr/bin/env
+#!/usr/bin/env node
 
 import yargs from "yargs";
 import { removeDuplicatedActions } from "./commands/cleanup";
@@ -10,7 +9,6 @@ import { runScheduler } from "./commands/scheduler";
 import { runWorker } from "./commands/worker";
 import { runManager } from "./commands/manager";
 import { inspect } from "./commands/inspect";
-import { stream } from "./commands/stream";
 
 process.on("unhandledRejection", (err) => {
   console.log("CLI got unhandledRejection", err);
@@ -37,5 +35,4 @@ yargs(process.argv.slice(2))
   .command("cleanupDupes", "remove duplicated actions", removeDuplicatedActions)
   .command("migrateChat", "migrate datetime format", migrate)
   .command("inspect", "migrate datetime format", inspect)
-  .command("stream", "stream events", stream)
   .demandCommand(1).argv;

@@ -1,7 +1,6 @@
 import BeeQueue from "bee-queue";
-import { Action, Masterchat, MasterchatError, timeoutThen } from "masterchat";
-import mongo from "mongodb";
-const { MongoError } = mongo;
+import { Action, delay, Masterchat, MasterchatError } from "masterchat";
+import { MongoError } from "mongodb";
 import { FetchError } from "node-fetch";
 import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
 import { ErrorCode, Result, Stats } from "../interfaces";
@@ -21,7 +20,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     },
   } = job.data;
 
-  const mc = new Masterchat(videoId, channelId, { isLive: true });
+  const mc = new Masterchat(videoId, channelId, { mode: "live" });
   let stats: Stats = { handled: 0, errors: 0, isWarmingUp: true };
 
   function videoLog(...obj: any) {
@@ -162,13 +161,13 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const interval = setInterval(() => {
     job.reportProgress(stats);
   }, 5000);
-  await timeoutThen(randomTimeoutMs);
+  await delay(randomTimeoutMs);
   clearInterval(interval);
 
   stats.isWarmingUp = false;
   job.reportProgress(stats);
 
-  videoLog(`start processing live chats (${randomTimeoutMs}ms elapsed)`);
+  videoLog(`start processing live chats (buffer: ${randomTimeoutMs}ms)`);
 
   // iterate over live chat
   try {

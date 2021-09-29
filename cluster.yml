@@ -40,11 +40,12 @@ services:
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
       PERM_WORKERS: ${PERM_WORKERS}
       TF_PROJECT_ROOT: /app/tf
-      TF_VAR_do_token: ${TF_VAR_do_token}
-      TF_VAR_do_ssh_keys: ${TF_VAR_do_ssh_keys}
+      TF_VAR_token: ${TF_VAR_token}
+      TF_VAR_ssh_keys: ${TF_VAR_ssh_keys}
       TF_VAR_provision_key_path: /tfKey
     volumes:
       - ${TF_PROVISION_KEY_PATH}:/tfKey:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - redis
     deploy:
