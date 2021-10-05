@@ -24,7 +24,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   let stats: Stats = { handled: 0, errors: 0, isWarmingUp: true };
 
   function videoLog(...obj: any) {
-    console.log(`${videoId},${channelId} -`, ...obj);
+    console.log(`${videoId} ${channelId} -`, ...obj);
   }
 
   function refreshStats(actions: Action[]) {
@@ -194,23 +194,23 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           // immediately fail so that the scheduler can push the job to delayed queue
           // TODO: handle when querying archived stream
           throw new Error(
-            `chat is disabled OR archived stream (start_scheduled: ${job.data.stream.start_scheduled}`
+            `chat is disabled OR archived stream (start_scheduled: ${job.data.stream.start_scheduled})`
           );
         }
         // TODO: should treat these as an indication of the end of the live stream?
         case "unavailable": {
           videoLog("unavailable");
-          break;
+          return { error: ErrorCode.Unavailable, result: stats };
         }
         case "private": {
           videoLog("private");
-          break;
+          return { error: ErrorCode.Private, result: stats };
         }
       }
     }
 
-    // change delay backoff time to 1 min
-    job.backoff("fixed", 1 * 60 * 1000);
+    // change delay backoff time to 30 sec
+    job.backoff("fixed", 30 * 1000);
 
     // unrecognized errors
     throw err;
@@ -229,8 +229,8 @@ export async function runWorker() {
     console.log("quitting worker (SIGTERM) ...");
 
     try {
-      await disconnectFromMongo();
       await queue.close(SHUTDOWN_TIMEOUT);
+      await disconnectFromMongo();
     } catch (err) {
       console.log("bee-queue failed to shut down gracefully", err);
     }
@@ -247,6 +247,7 @@ export async function runWorker() {
     // code: 'EHOSTUNREACH'
     // code: 'UNCERTAIN_STATE'
     console.log("queue got error:", (err as any)?.code, err.message);
+    process.exit(1);
   });
 
   queue.process<Result>(JOB_CONCURRENCY, handleJob);

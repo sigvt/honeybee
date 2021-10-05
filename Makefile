@@ -10,10 +10,10 @@ stop:
 	docker stack rm hb
 
 deploy:
-	docker stack deploy -c cluster.yml --with-registry-auth hb
+	docker stack deploy -c docker-compose.production.yml --with-registry-auth hb
 
 logs:
-	concurrently -n SCH,WRK -c blue,green "docker service logs -t -f --raw --tail=100 hb_scheduler | ruby -r 'date' -ne 'print \$$_.gsub(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z/) { |time| DateTime.parse(time).new_offset(\"+9\").to_s }'" "docker service logs -t -f --no-trunc --no-task-ids --tail=100 hb_worker | ruby -r 'date' -ne 'print \$$_.gsub(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z/) { |time| DateTime.parse(time).new_offset(\"+9\").to_s }'"
+	docker service logs -t --raw hb_scheduler 2>&1
 
 workerLogs:
 	docker service logs -t --raw hb_worker 2>&1

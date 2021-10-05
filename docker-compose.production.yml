@@ -38,7 +38,7 @@ services:
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
-      PERM_WORKERS: ${PERM_WORKERS}
+      STANDING_WORKERS: ${STANDING_WORKERS}
       TF_PROJECT_ROOT: /app/tf
       TF_VAR_token: ${TF_VAR_token}
       TF_VAR_ssh_keys: ${TF_VAR_ssh_keys}
@@ -46,6 +46,7 @@ services:
     volumes:
       - ${TF_PROVISION_KEY_PATH}:/tfKey:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./tf:/app/tf
     depends_on:
       - redis
     deploy:
@@ -62,7 +63,7 @@ services:
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
-      MAX_UPCOMING_HOURS: ${MAX_UPCOMING_HOURS}
+      HOLODEX_MAX_UPCOMING_HOURS: ${HOLODEX_MAX_UPCOMING_HOURS}
       HOLODEX_API_KEY: ${HOLODEX_API_KEY}
       CACHE_PATH: /cache
     volumes:

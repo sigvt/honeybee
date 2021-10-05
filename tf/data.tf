@@ -1,6 +1,6 @@
 
 data "http" "selfip" {
-  url = "http://ifconfig.co/"
+  url = "https://api.ipify.org"
 }
 
 module "join-token" {

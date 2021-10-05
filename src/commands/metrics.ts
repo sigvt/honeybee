@@ -79,7 +79,7 @@ async function* groupByChannel(
 async function* groupByCountry(records: any, key: string) {
   const groups = groupBy<any, any, any>(records, "currency");
   for (const [currency, records] of Object.entries(groups)) {
-    const country = CURRENCY_TO_TLS_MAP[currency];
+    const country = CURRENCY_TO_TLS_MAP[currency] ?? currency;
     yield {
       fields: { [key]: records.length },
       tags: {

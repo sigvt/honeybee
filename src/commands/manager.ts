@@ -10,7 +10,7 @@ import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
 import { getQueueInstance } from "../modules/queue";
 
 const TF_PROJECT_ROOT = process.env.TF_PROJECT_ROOT;
-const PERM_WORKERS = Number(process.env.PERM_WORKERS ?? 0);
+const STANDING_WORKERS = Number(process.env.STANDING_WORKERS ?? 0);
 
 async function scaleNodes(totalWorkers: number = 1) {
   const args = [
@@ -61,9 +61,9 @@ export async function runManager() {
 
     const totalJobs = health.active + health.delayed + health.waiting;
     const requiredWorkers = Math.ceil(totalJobs / JOB_CONCURRENCY + 0.3);
-    const doWorkers = Math.max(requiredWorkers - PERM_WORKERS, 0);
+    const doWorkers = Math.max(requiredWorkers - STANDING_WORKERS, 0);
     console.log(
-      `applying new cluster settings: jobs=${totalJobs} required=${requiredWorkers} | perm=${PERM_WORKERS} do=${previousWorkers} -> ${doWorkers}`
+      `applying new cluster settings: jobs=${totalJobs} required=${requiredWorkers} | perm=${STANDING_WORKERS} do=${previousWorkers} -> ${doWorkers}`
     );
 
     // if (doWorkers !== previousWorkers)
@@ -74,7 +74,7 @@ export async function runManager() {
 
   queue.on("ready", async () => {
     console.log(
-      `manager has been started (concurrency: ${JOB_CONCURRENCY}, perm: ${PERM_WORKERS})`
+      `manager has been started (concurrency=${JOB_CONCURRENCY} perm=${STANDING_WORKERS})`
     );
 
     schedule.scheduleJob("10 */1 * * *", rearrange);

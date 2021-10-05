@@ -4,7 +4,7 @@ import {
   HOLODEX_API_KEY,
   IGNORE_FREE_CHAT,
   JOB_CONCURRENCY,
-  MAX_UPCOMING_HOURS,
+  HOLODEX_MAX_UPCOMING_HOURS,
   SHUTDOWN_TIMEOUT,
 } from "../constants";
 import { ErrorCode, Result, Stats } from "../interfaces";
@@ -105,7 +105,7 @@ export async function runScheduler() {
     ).map((job) => job.data.videoId);
 
     const liveAndUpcomingStreams = await fetchLiveStreams({
-      maxUpcomingHours: MAX_UPCOMING_HOURS,
+      maxUpcomingHours: HOLODEX_MAX_UPCOMING_HOURS,
       apiKey: HOLODEX_API_KEY!,
     });
 
@@ -177,7 +177,7 @@ Delayed=${health.delayed}`
       case ErrorCode.Private: {
         // live stream is still ongoing but somehow got response with empty continuation hence mistaken as being finished -> will be added in next invocation. If the stream was actually ended that's ok bc the stream index won't have that stream anymore, or else it will be added to worker again.
         // live stream was over and the result is finalized -> the index won't have that videoId anymore so it's safe to remove them from the cache
-        schedulerLog(`[job maybe succeeded]: ${jobId}`);
+        schedulerLog(`[job maybe succeeded]: ${jobId} (${result.error})`);
         break;
       }
       case ErrorCode.Unknown: {
@@ -219,7 +219,7 @@ Delayed=${health.delayed}`
 
   queue.on("ready", async () => {
     console.log(
-      `scheduler is ready (concurrency: ${JOB_CONCURRENCY}, max_upcoming_hours=${MAX_UPCOMING_HOURS})`
+      `scheduler is ready (concurrency: ${JOB_CONCURRENCY}, max_upcoming_hours=${HOLODEX_MAX_UPCOMING_HOURS})`
     );
 
     handledVideoIdCache.clear();

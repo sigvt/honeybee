@@ -1,24 +1,19 @@
 {
   "name": "honeybee",
-  "description": "a distributed YouTube live chat and moderation events collector.",
+  "description": "a distributed YouTube live chat and moderation events collector",
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
   "scripts": {
     "build": "tsc && shx chmod +x lib/index.js",
     "clean": "shx rm -rf lib",
     "dev": "tsc -w",
-    "prepublishOnly": "npm run clean && npm run build",
     "test": "jest"
   },
   "main": "lib/index.js",
-  "types": "lib/index.d.ts",
   "bin": {
     "honeybee": "lib/index.js",
     "hb": "lib/index.js"
   },
-  "files": [
-    "lib"
-  ],
   "dependencies": {
     "@typegoose/typegoose": "^9.0.1",
     "bee-queue": "^1.4.0",

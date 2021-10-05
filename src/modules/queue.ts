@@ -17,7 +17,7 @@ export function getQueueInstance(args: any = {}) {
 
   return new Queue<Job>(QUEUE_NAME, {
     redis: redis.createClient(REDIS_URI),
-    stallInterval: 15 * 1000,
+    stallInterval: 30 * 1000, // 30sec
     ...args,
   });
 }

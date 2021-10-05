@@ -14,3 +14,39 @@ docker-compose up
 ```bash
 MONGO_URI=mongodb://localhost/honeybee lib/index.js inspect
 ```
+
+## Spin up a cluster
+
+```bash
+cp .env.placeholder .env
+vim .env
+
+mkdir -p $DATA_DIR/{redis,mongo,cache}
+
+docker swarm init --advertise-addr $(curl -s https://api.ipify.org)
+docker network create -d overlay --attachable honeybee
+docker stack deploy -c docker-compose.production.yml hb
+```
+
+```bash
+# in main node
+make logindb
+```
+
+```js
+db.createUser({
+  user: "worker",
+  pwd: passwordPrompt(), // or cleartext password
+  roles: [{ role: "readWrite", db: "honeybee" }],
+});
+```
+
+```bash
+sed -i "s/MONGO_WORKER_PASSWORD=/MONGO_WORKER_PASSWORD=<password>/" .env
+```
+
+## Show cluster health
+
+```bash
+make health
+```

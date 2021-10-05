@@ -22,6 +22,25 @@ apt-get install docker-ce docker-ce-cli containerd.io -y
 docker swarm join --token <join-token> --advertise-addr $(curl -s ifconfig.co) <master-ip>:2377
 ```
 
+## Employ external nodes
+
+```bash
+cd tf
+terraform init -upgrade
+terraform apply -var total_workers=3
+
+docker node ls # list nodes
+docker node promote <node> # promote more than 2 nodes as managers in case of changing ip address of main node
+```
+
+### Teardown external nodes
+
+```bash
+docker node rm -f <node>
+cd tf
+terraform destroy
+```
+
 ## Recreate cluster
 
 ```bash
