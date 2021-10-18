@@ -38,7 +38,7 @@ services:
     environment:
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
-      STANDING_WORKERS: ${STANDING_WORKERS}
+      PERMANENT_WORKER_IP: ${PERMANENT_WORKER_IP}
       TF_PROJECT_ROOT: /app/tf
       TF_VAR_token: ${TF_VAR_token}
       TF_VAR_ssh_keys: ${TF_VAR_ssh_keys}

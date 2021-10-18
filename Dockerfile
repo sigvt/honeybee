@@ -4,7 +4,7 @@ WORKDIR /app
 
 # terraform
 RUN apk add terraform --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
-RUN apk add git ruby ruby-dev docker-cli build-base
+RUN apk add git ruby ruby-dev docker-cli build-base openssh
 RUN gem install json
 COPY tf /app/tf
 WORKDIR /app/tf

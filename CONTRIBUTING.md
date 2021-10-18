@@ -50,3 +50,31 @@ sed -i "s/MONGO_WORKER_PASSWORD=/MONGO_WORKER_PASSWORD=<password>/" .env
 ```bash
 make health
 ```
+
+## MongoDB Query
+
+```js
+db.chats.aggregate([
+  {
+    $match: {
+      originChannelId: "",
+      timestamp: { $gt: new Date(2021, 9, 7) },
+      authorName: "",
+    },
+  },
+  {
+    $project: {
+      timestamp: 1,
+      msg: {
+        $reduce: {
+          input: "$message",
+          initialValue: "",
+          in: { $concat: ["$$value", "$$this.text"] },
+        },
+      },
+    },
+  },
+  { $match: { msg: { $ne: null } } },
+  { $sort: { timestamp: 1 } },
+]);
+```

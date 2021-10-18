@@ -1,7 +1,8 @@
 // https://github.com/grafana/grafana/blob/main/public/gazetteer/countries.json
 export const CURRENCY_TO_TLS_MAP: Record<string, string> = {
   USD: "USA",
-  EUR: "GBR",
+  EUR: "DEU",
+  GBP: "GBR",
   JPY: "JPN",
   KRW: "KOR",
   ILS: "ISR",
@@ -32,7 +33,7 @@ export const CURRENCY_TO_TLS_MAP: Record<string, string> = {
   JOD: "JOR",
   MAD: "MAR",
   MKD: "MKD",
-  MXD: "MEX",
+  MXN: "MEX",
   MYR: "MYS",
   NIO: "NIC",
   NOK: "NOR",

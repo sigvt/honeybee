@@ -145,6 +145,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           videoLog("fetch error", err.type, err.code, err.errno, err.message);
         } else if (err instanceof Error) {
           videoLog("unrecognized error", err.name, err.message);
+          process.exit(1);
         }
 
         throw err;

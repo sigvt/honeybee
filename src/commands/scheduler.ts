@@ -101,7 +101,7 @@ export async function runScheduler() {
     schedulerLog("[updating index]", invokedAt);
 
     const alreadyActiveJobs = (
-      await queue.getJobs("active", { start: 0, end: 300 })
+      await queue.getJobs("active", { start: 0, end: 600 })
     ).map((job) => job.data.videoId);
 
     const liveAndUpcomingStreams = await fetchLiveStreams({
@@ -130,7 +130,7 @@ export async function runScheduler() {
 
     // show metrics
     const health = await queue.checkHealth();
-    const activeJobs = await queue.getJobs("active", { start: 0, end: 300 });
+    const activeJobs = await queue.getJobs("active", { start: 0, end: 600 });
     let nbWarmingUp = 0;
     let nbTotal = 0;
     for (const job of activeJobs) {

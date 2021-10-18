@@ -50,6 +50,9 @@ export const fetchChannel = cached(
     )) as HolodexChannelInfo;
 
     return response;
+  },
+  {
+    lifetimeMs: 1000 * 60 * 60 * 24 * 7,
   }
 );
 
