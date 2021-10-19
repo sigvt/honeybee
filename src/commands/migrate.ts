@@ -1,6 +1,8 @@
 import { initMongo } from "../modules/db";
 import Chat from "../models/Chat";
 import SuperChat from "../models/SuperChat";
+import { timeoutThen } from "../util";
+import chalk from "chalk";
 
 // MEMO:
 // const aggregate = await BanAction.aggregate([
@@ -28,21 +30,20 @@ export const SUPERCHAT_COLOR_MAP = {
   "4291821568": "red",
 } as const;
 
-// Map from color to significance
-export const SUPERCHAT_SIGNIFICANCE_MAP = {
-  blue: 1,
-  lightblue: 2,
-  green: 3,
-  yellow: 4,
-  orange: 5,
-  magenta: 6,
-  red: 7,
-} as const;
-
 export async function migrate(argv: any) {
   console.log("connecting");
   const disconnect = await initMongo();
 
+  await migrateRawMessage();
+  // await migrateSuperchat();
+  // TODO: migrateCurrencySymbol
+
+  await timeoutThen(5000);
+
+  await disconnect();
+}
+
+async function migrateRawMessage() {
   let nbIterations = 0;
   let timeStarted = Date.now();
 
@@ -53,18 +54,32 @@ export async function migrate(argv: any) {
   )) {
     // @ts-ignore
     doc.message = doc.rawMessage;
-    await doc.save();
+    doc.save();
 
     nbIterations += 1;
-    if (nbIterations % 100000 == 0) {
-      console.log(doc._id);
-      const timeElasped = (Date.now() - timeStarted) / 1000 / 60;
-      console.log(`iterations: ${nbIterations}`);
-      console.log(`time elapsed: ${timeElasped} minutes`);
+    if (nbIterations % 10000 == 0) {
+      process.stdout.write(".");
     }
   }
+  process.stdout.write("\n");
+}
 
+async function migrateSuperchat() {
   console.log("purchase -> SuperChat");
+
+  // Map from color to significance
+  const SUPERCHAT_SIGNIFICANCE_MAP = {
+    blue: 1,
+    lightblue: 2,
+    green: 3,
+    yellow: 4,
+    orange: 5,
+    magenta: 6,
+    red: 7,
+  } as const;
+
+  let nbIterations = 0;
+
   for await (const doc of Chat.find({ purchase: { $exists: true } })) {
     // {"headerTextColor":"3741319168","amount":150,"headerBackgroundColor":"4294947584","bodyTextColor":"3741319168","currency":"NT$","bodyBackgroundColor":"4294953512"}
     // @ts-ignore
@@ -99,15 +114,14 @@ export async function migrate(argv: any) {
 
     await sp.save();
     // await doc.remove();
-
     nbIterations += 1;
-    if (nbIterations % 100000 == 0) {
-      console.log(doc._id);
-      const timeElasped = (Date.now() - timeStarted) / 1000 / 60;
-      console.log(`iterations: ${nbIterations}`);
-      console.log(`time elapsed: ${timeElasped} minutes`);
+    if (nbIterations % 10000 == 0) {
+      // console.log(doc._id);
+      // const timeElasped = (Date.now() - timeStarted) / 1000 / 60;
+      // console.log(`iterations: ${nbIterations}`);
+      // console.log(`time elapsed: ${timeElasped} minutes`);
+      process.stdout.write(".");
     }
   }
-
-  await disconnect();
+  process.stdout.write("\n");
 }

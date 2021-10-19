@@ -3,7 +3,7 @@ version: "3.9"
 services:
   mongo:
     image: mongo:5
-    command: --wiredTigerCacheSizeGB 25
+    #command: --wiredTigerCacheSizeGB 25
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
