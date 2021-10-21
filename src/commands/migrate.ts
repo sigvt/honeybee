@@ -1,8 +1,6 @@
-import { initMongo } from "../modules/db";
-import Chat from "../models/Chat";
 import SuperChat from "../models/SuperChat";
+import { initMongo } from "../modules/db";
 import { timeoutThen } from "../util";
-import chalk from "chalk";
 
 export async function migrate(argv: any) {
   console.log("connecting to db");

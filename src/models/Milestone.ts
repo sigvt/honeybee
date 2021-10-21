@@ -7,34 +7,27 @@ import {
 import { YTRun } from "masterchat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
-export class SuperChat {
-  @prop({ required: true, unique: true })
+export class Milestone {
+  @prop({ required: true })
   public id!: string;
 
-  @prop({ allowMixed: true })
-  public message!: YTRun[] | null;
-
-  @prop({ required: true })
-  public purchaseAmount!: number;
-
-  @prop({ required: true })
-  public currency!: string;
-
-  @prop({ required: true })
-  public significance!: number;
-
-  @prop({ required: true })
-  public color!: string;
+  @prop()
+  public level?: string;
 
   @prop()
-  public authorName?: string;
+  public duration?: number;
+
+  @prop()
+  public since?: string;
+
+  @prop({ allowMixed: true })
+  public message?: YTRun[] | null;
+
+  @prop({ required: true })
+  public authorName!: string;
 
   @prop({ required: true })
   public authorChannelId!: string;
-
-  // TODO: will be removed
-  @prop()
-  public authorPhoto?: string;
 
   @prop({ required: true })
   public originVideoId!: string;
@@ -46,4 +39,4 @@ export class SuperChat {
   public timestamp!: Date;
 }
 
-export default getModelForClass(SuperChat);
+export default getModelForClass(Milestone);

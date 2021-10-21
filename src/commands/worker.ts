@@ -4,10 +4,12 @@ import { MongoError } from "mongodb";
 import { FetchError } from "node-fetch";
 import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
 import { ErrorCode, Result, Stats } from "../interfaces";
-import BanAction from "../models/BanAction";
-import Chat from "../models/Chat";
-import DeleteAction from "../models/DeleteAction";
-import SuperChat from "../models/SuperChat";
+import BanActionModel, { BanAction } from "../models/BanAction";
+import ChatModel, { Chat } from "../models/Chat";
+import DeleteActionModel, { DeleteAction } from "../models/DeleteAction";
+import MembershipModel, { Membership } from "../models/Membership";
+import MilestoneModel, { Milestone } from "../models/Milestone";
+import SuperChatModel, { SuperChat } from "../models/SuperChat";
 import { initMongo } from "../modules/db";
 import { getQueueInstance, Job } from "../modules/queue";
 import { groupBy } from "../util";
@@ -47,25 +49,25 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       try {
         switch (type) {
           case "addChatItemAction": {
-            const payload = groupedActions[type].map((action) => ({
+            const payload: Chat[] = groupedActions[type].map((action) => ({
               timestamp: action.timestamp,
               id: action.id,
               message: action.message,
               membership: action.membership,
               authorName: action.authorName,
               authorChannelId: action.authorChannelId,
-              authorPhoto: action.authorPhoto,
+              // authorPhoto: action.authorPhoto,
               isVerified: action.isVerified,
               isOwner: action.isOwner,
               isModerator: action.isModerator,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
             }));
-            await Chat.insertMany(payload, insertOptions);
+            await ChatModel.insertMany(payload, insertOptions);
             break;
           }
           case "addSuperChatItemAction": {
-            const payload = groupedActions[type].map((action) => ({
+            const payload: SuperChat[] = groupedActions[type].map((action) => ({
               timestamp: action.timestamp,
               id: action.id,
               message:
@@ -78,36 +80,69 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
               color: action.color,
               authorName: action.authorName,
               authorChannelId: action.authorChannelId,
-              authorPhoto: action.authorPhoto,
+              // authorPhoto: action.authorPhoto,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
             }));
-            await SuperChat.insertMany(payload, insertOptions);
+            await SuperChatModel.insertMany(payload, insertOptions);
             break;
           }
           case "markChatItemAsDeletedAction": {
-            const payload = groupedActions[type].map((action) => ({
-              timestamp: action.timestamp,
-              targetId: action.targetId,
-              retracted: action.retracted,
-              originVideoId: action.originVideoId,
-              originChannelId: action.originChannelId,
-            }));
-            await DeleteAction.insertMany(payload, insertOptions);
+            const payload: DeleteAction[] = groupedActions[type].map(
+              (action) => ({
+                targetId: action.targetId,
+                retracted: action.retracted,
+                originVideoId: action.originVideoId,
+                originChannelId: action.originChannelId,
+                timestamp: action.timestamp,
+              })
+            );
+            await DeleteActionModel.insertMany(payload, insertOptions);
             break;
           }
           case "markChatItemsByAuthorAsDeletedAction": {
-            const payload = groupedActions[type].map((action) => ({
-              timestamp: action.timestamp,
+            const payload: BanAction[] = groupedActions[type].map((action) => ({
               channelId: action.channelId,
               originVideoId: action.originVideoId,
               originChannelId: action.originChannelId,
+              timestamp: action.timestamp,
             }));
-            await BanAction.insertMany(payload, insertOptions);
+            await BanActionModel.insertMany(payload, insertOptions);
+            break;
+          }
+          case "addMembershipItemAction": {
+            const payload: Membership[] = groupedActions[type].map(
+              (action) => ({
+                id: action.id,
+                level: action.level,
+                since: action.membership.since,
+                authorName: action.authorName,
+                authorChannelId: action.authorChannelId,
+                originVideoId: action.originVideoId,
+                originChannelId: action.originChannelId,
+                timestamp: action.timestamp,
+              })
+            );
+            await MembershipModel.insertMany(payload, insertOptions);
+            break;
+          }
+          case "addMembershipMilestoneItemAction": {
+            const payload: Milestone[] = groupedActions[type].map((action) => ({
+              id: action.id,
+              level: action.level,
+              duration: action.duration,
+              since: action.membership.since,
+              message: action.message,
+              authorName: action.authorName,
+              authorChannelId: action.authorChannelId,
+              originVideoId: action.originVideoId,
+              originChannelId: action.originChannelId,
+              timestamp: action.timestamp,
+            }));
+            await MilestoneModel.insertMany(payload, insertOptions);
             break;
           }
           case "addBannerAction":
-          case "addMembershipItemAction":
           case "addMembershipTickerAction":
           case "addPlaceholderItemAction":
           case "addSuperChatTickerAction":
@@ -122,7 +157,6 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           case "showPollPanelAction":
           case "showTooltipAction":
           case "updatePollAction":
-          case "addMembershipMilestoneItemAction":
             break;
           default: {
             const _exhaust: never = type;

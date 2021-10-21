@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from "@typegoose/typegoose";
 
 // @index({ channelId: 1, originVideoId: 1 }, { unique: true })
-class BanAction {
+export class BanAction {
   @prop({ required: true })
   channelId!: string;
 

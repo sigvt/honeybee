@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from "@typegoose/typegoose";
 
 // @index({ targetId: 1, originVideoId: 1 }, { unique: true })
-class DeleteAction {
+export class DeleteAction {
   @prop({ required: true })
   targetId!: string;
 

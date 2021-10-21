@@ -7,13 +7,14 @@ import {
 import { YTRun, Membership } from "masterchat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
-class Chat {
+export class Chat {
   @prop({ required: true, unique: true })
   public id!: string;
 
   @prop({ required: true, allowMixed: true })
   public message!: YTRun[];
 
+  // TODO: will be normalized
   @prop({ allowMixed: true })
   public membership?: Membership;
 
@@ -23,8 +24,9 @@ class Chat {
   @prop({ required: true })
   public authorChannelId!: string;
 
-  @prop({ required: true })
-  public authorPhoto!: string;
+  // TODO: will be removed
+  @prop()
+  public authorPhoto?: string;
 
   @prop({ required: true })
   public isVerified!: Boolean;
