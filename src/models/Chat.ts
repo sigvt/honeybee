@@ -14,14 +14,6 @@ class Chat {
   @prop({ required: true, allowMixed: true })
   public message!: YTRun[];
 
-  // TODO: migrate to message
-  // @prop({ allowMixed: true })
-  // public rawMessage?: YTRun[];
-
-  // TODO: will be moved to SuperChat
-  // @prop({ allowMixed: true })
-  // public purchase?: SuperChat;
-
   @prop({ allowMixed: true })
   public membership?: Membership;
 
@@ -53,8 +45,8 @@ class Chat {
   public timestamp!: Date;
 
   // TODO: will be removed
-  // @prop()
-  // public timestampUsec?: string;
+  @prop()
+  public timestampUsec?: string;
 }
 
 export default getModelForClass(Chat);

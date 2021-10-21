@@ -12,7 +12,7 @@ class SuperChat {
   public id!: string;
 
   @prop({ allowMixed: true })
-  public message?: YTRun[];
+  public message!: YTRun[] | null;
 
   @prop({ required: true })
   public purchaseAmount!: number;

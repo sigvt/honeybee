@@ -50,7 +50,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             const payload = groupedActions[type].map((action) => ({
               timestamp: action.timestamp,
               id: action.id,
-              message: action.rawMessage,
+              message: action.message,
               membership: action.membership,
               authorName: action.authorName,
               authorChannelId: action.authorChannelId,
@@ -68,11 +68,14 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             const payload = groupedActions[type].map((action) => ({
               timestamp: action.timestamp,
               id: action.id,
-              message: action.rawMessage,
-              purchaseAmount: action.superchat.amount,
-              currency: action.superchat.currency,
-              significance: action.superchat.significance,
-              color: action.superchat.color,
+              message:
+                action.message && action.message.length > 0
+                  ? action.message
+                  : null,
+              purchaseAmount: action.amount,
+              currency: action.currency,
+              significance: action.significance,
+              color: action.color,
               authorName: action.authorName,
               authorChannelId: action.authorChannelId,
               authorPhoto: action.authorPhoto,
@@ -103,21 +106,23 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             await BanAction.insertMany(payload, insertOptions);
             break;
           }
-          case "addSuperChatTickerAction":
+          case "addBannerAction":
           case "addMembershipItemAction":
           case "addMembershipTickerAction":
           case "addPlaceholderItemAction":
-          case "replaceChatItemAction":
+          case "addSuperChatTickerAction":
           case "addSuperStickerItemAction":
           case "addSuperStickerTickerAction":
-          case "addBannerAction":
-          case "removeBannerAction":
-          case "showTooltipAction":
           case "addViewerEngagementMessageAction":
-          case "updateLiveChatPollAction":
+          case "closePanelAction":
           case "modeChangeAction":
-          case "showLiveChatActionPanelAction":
-          case "closeLiveChatActionPanelAction":
+          case "removeBannerAction":
+          case "replaceChatItemAction":
+          case "showPanelAction":
+          case "showPollPanelAction":
+          case "showTooltipAction":
+          case "updatePollAction":
+          case "addMembershipMilestoneItemAction":
             break;
           default: {
             const _exhaust: never = type;
@@ -188,9 +193,6 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         case "denied": {
           return { error: ErrorCode.Ban };
         }
-        case "unknown": {
-          return { error: ErrorCode.Unknown };
-        }
         case "disabled": {
           // immediately fail so that the scheduler can push the job to delayed queue
           // TODO: handle when querying archived stream
@@ -198,7 +200,6 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             `chat is disabled OR archived stream (start_scheduled: ${job.data.stream.start_scheduled})`
           );
         }
-        // TODO: should treat these as an indication of the end of the live stream?
         case "unavailable": {
           videoLog("unavailable");
           return { error: ErrorCode.Unavailable, result: stats };

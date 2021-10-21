@@ -33,6 +33,6 @@ yargs(process.argv.slice(2))
   .command("health", "show real-time cluster status", health)
   .command("metrics", "Telegraf metrics endpoint", metrics)
   .command("cleanupDupes", "remove duplicated actions", removeDuplicatedActions)
-  .command("migrateChat", "migrate datetime format", migrate)
+  .command("migrate", "migrate datetime format", migrate)
   .command("inspect", "migrate datetime format", inspect)
   .demandCommand(1).argv;

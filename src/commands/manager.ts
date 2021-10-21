@@ -45,7 +45,7 @@ async function prune(ip: string) {
     [
       `root@${ip}`,
       "-o",
-      "StrictHostKeyChecking no",
+      "'StrictHostKeyChecking no'",
       "-i",
       TF_KEY_PATH,
       "--",
