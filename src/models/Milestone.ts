@@ -8,7 +8,7 @@ import { YTRun } from "masterchat";
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Milestone {
-  @prop({ required: true })
+  @prop({ required: true, unique: true })
   public id!: string;
 
   @prop()
@@ -26,13 +26,13 @@ export class Milestone {
   @prop({ required: true })
   public authorName!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public authorChannelId!: string;
 
   @prop({ required: true })
   public originVideoId!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public originChannelId!: string;
 
   @prop({ required: true, index: true })

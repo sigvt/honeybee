@@ -13,7 +13,7 @@ deploy:
 	docker stack deploy -c docker-compose.production.yml --with-registry-auth hb
 
 logs:
-	docker service logs --tail=20000 -t -f hb_worker 2>&1 | grep -iE 'required|<!>|unrecognized|mongo'
+	docker service logs --tail=20000 -t -f hb_worker 2>&1 | grep -iE 'required|<!>|unrecognized|unhandled'
 
 schLogs:
 	docker service logs -t --raw hb_scheduler 2>&1
@@ -21,7 +21,7 @@ schLogs:
 ps:
 	docker stack ps hb -f 'desired-state=running'
 
-sh: build
+sh:
 	docker run --rm --network honeybee -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/${MONGO_DATABASE} -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis -v $(CURDIR)/lib:/app/lib ${HONEYBEE_IMAGE} sh
 
 logindb:
