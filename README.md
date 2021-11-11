@@ -1,12 +1,12 @@
 # 🍯🐝 honeybee
 
-![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header.png)
+![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header2.png)
 
 Honeybee is a distributed YouTube live chat and moderation events collector.
 
 ## How it works
 
-- Fetch streams index from Holodex (every 10 minutes)
+- Fetch streams index from Holodex (every 5 minutes)
 - Queue newly scheduled streams to a job pool
 - One of the cluster members takes it and start collecting events
 
