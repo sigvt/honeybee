@@ -7,14 +7,14 @@ import {
 
 @modelOptions({
   options: { allowMixed: Severity.ALLOW },
-  schemaOptions: { collection: "superchats" },
+  schemaOptions: { collection: "superstickers" },
 })
-export class SuperChat {
+export class SuperSticker {
+  @prop({ required: true, index: true })
+  public timestamp!: Date;
+
   @prop({ required: true, unique: true })
   public id!: string;
-
-  @prop({ required: true })
-  public message!: string | null;
 
   @prop()
   public authorName?: string;
@@ -23,25 +23,25 @@ export class SuperChat {
   public authorChannelId!: string;
 
   @prop({ required: true })
-  public purchaseAmount!: number;
+  public amount!: number;
 
   @prop({ required: true })
   public currency!: string;
 
-  @prop({ required: true })
-  public significance!: number;
+  @prop()
+  public text?: string;
 
-  @prop({ required: true })
-  public color!: string;
+  // @prop({ required: true })
+  // public significance!: number;
+
+  // @prop({ required: true })
+  // public color!: string;
 
   @prop({ required: true })
   public originVideoId!: string;
 
   @prop({ required: true, index: true })
   public originChannelId!: string;
-
-  @prop({ required: true, index: true })
-  public timestamp!: Date;
 }
 
-export default getModelForClass(SuperChat);
+export default getModelForClass(SuperSticker);

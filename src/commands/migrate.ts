@@ -1,5 +1,6 @@
-import { stringify } from "masterchat";
+import { stringify, YTEmojiRun } from "masterchat";
 import Chat from "../models/Chat";
+import Milestone from "../models/Milestone";
 import SuperChat from "../models/SuperChat";
 import { initMongo } from "../modules/db";
 import { timeoutThen } from "../util";
@@ -8,18 +9,8 @@ export async function migrate(argv: any) {
   console.log("connecting to db");
   const disconnect = await initMongo();
 
-  // TODO
-  // normalize membership info (same as membership table)
-  await normalizeMembership();
-
-  // normalize message
-  // await normalizeMessage();
-
-  // zap author photo column
-  // await zapAuthorPhoto();
-
-  // zap timestampUsec column
-  // await zapTimestampUsec();
+  // normalize message and membership
+  // await normalize();
 
   // normalize currency symbol
   // await normalizeCurrencySymbol();
@@ -80,168 +71,96 @@ async function normalizeCurrencySymbol() {
   }
 }
 
-async function normalizeMembership() {
-  console.log("normalizeMembership");
+async function normalize() {
+  console.log("normalize");
 
   let nbIterations = 0;
 
-  for await (const doc of Chat.find(
+  function emojiHandler({ emoji }: YTEmojiRun) {
+    return emoji.isCustomEmoji
+      ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
+      : emoji.emojiId;
+  }
+
+  const stringifyOption = {
+    spaces: false,
+    emojiHandler,
+  };
+
+  for await (const doc of Milestone.find(
     {
-      _id: { $gte: "604dd5eca1fabd828af864df" },
-      membership: { $exists: true },
+      // _id: { $gt: "608a86b7bce6012bbcfac608" },
+      // timestamp: {
+      //   $lt: new Date("2022-01-18T03:20:15.943Z"),
+      // },
+      message: { $exists: false },
     },
-    { membership: 1 }
+    {
+      message: 1,
+    }
   )) {
-    nbIterations += 1;
-    if (nbIterations % 1_000_000 == 0) {
-      console.log(doc._id);
-    }
-
     // process
-    const membership = doc.membership;
-    if (!membership) {
-      console.log("!membership", membership);
-      process.exit(1);
-    }
 
+    console.log(doc);
+    doc.message = null;
+    // message
+    // if (typeof doc.message === "object" && doc.message !== null) {
+    //   const normMessage = stringify(doc.message, stringifyOption);
+
+    //   doc.message = normMessage;
+    // }
+
+    // membership
     // skip already normalized docs
-    if (typeof membership === "string") continue;
+    // if (doc.membership && typeof doc.membership !== "string") {
+    //   const { status, since } = doc.membership;
+    //   if (status !== "Member" && status !== "New member") {
+    //     console.log("!malformed status", doc);
+    //     process.exit(1);
+    //   }
 
-    // {"thumbnail":"https:\/\/yt3.ggpht.com\/q9byWr1vaTCtgfB9WykJosrKhauNfAGBw55QKxLcATgmZHyANcAi-zG6eHNea9u6a4NHdhtD3fU=s32-c-k","status":"Member","since":"1 month"}
-    const { status, thumbnail, since } = membership;
-    if (status !== "Member" && status !== "New member") {
-      console.log("!malformed status", membership);
-      process.exit(1);
+    //   doc.membership = since ?? "new";
+    // }
+
+    nbIterations += 1;
+    if (nbIterations % 1_000_000 == 0) {
+      console.log(doc._id, new Date());
+      console.log(doc);
     }
 
-    doc.membership = since ?? "new";
-
-    console.log(doc);
-
-    // doc.save();
+    doc.save();
   }
+
   process.stdout.write("\n");
 }
 
-async function normalizeMessage() {
-  console.log("normalizeMessage");
+/**
+MEMO:
 
-  let nbIterations = 0;
+# Drop column
+# https://docs.mongodb.com/manual/tutorial/update-documents-with-aggregation-pipeline/
+db.chats.updateMany({}, [{ $unset: ["authorPhoto", "timestampUsec"] }]);
+db.superchats.updateMany({}, [{ $unset: "authorPhoto" }]);
 
-  for await (const doc of Chat.find(
-    {
-      // _id: { $gt: "a" },
-      message: { $exists: true },
-    },
-    { message: 1 }
-  )) {
-    nbIterations += 1;
-    if (nbIterations % 1_000_000 == 0) {
-      console.log(doc._id);
-    }
-
-    // process
-    const message = doc.message;
-
-    if (typeof message !== "object") {
-      console.log("!type mismatch", doc);
-      process.exit(1);
-    }
-
-    const normMessage = stringify(message, {
-      spaces: false,
-      emojiHandler: (run) => {
-        const { emoji } = run;
-        const term = emoji.isCustomEmoji
-          ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
-          : emoji.emojiId;
-        return term;
+# Add column
+const aggregate = await BanAction.aggregate([
+  {
+    $addFields: {
+      created: {
+        $toDate: "$timestampUsec",
       },
-    });
-
-    doc.message = normMessage;
-
-    console.log(doc);
-
-    process.exit(1);
-    // doc.save();
-  }
-  process.stdout.write("\n");
-}
-
-async function zapAuthorPhoto() {
-  console.log("zapAuthorPhoto");
-
-  let nbIterations = 0;
-
-  for await (const doc of Chat.find(
-    {
-      // _id: { $gt: "a" },
-      authorPhoto: { $exists: true },
     },
-    { authorPhoto: 1 }
-  )) {
-    nbIterations += 1;
-    if (nbIterations % 1_000_000 == 0) {
-      console.log(doc._id);
-    }
+  },
+]);
 
-    // process
-    (doc as any).authorPhoto = undefined;
+# Index
+db.chats.createIndex({timestamp: 1})
+db.chats.getIndexes()
+db.chats.createIndex({message: "text"})
 
-    console.log(doc);
-
-    process.exit(1);
-    // doc.save();
-  }
-  process.stdout.write("\n");
-}
-
-async function zapTimestampUsec() {
-  console.log("zapTimestampUsec");
-
-  let nbIterations = 0;
-
-  for await (const doc of Chat.find(
-    {
-      // _id: { $gt: "a" },
-      timestampUsec: { $exists: true },
-    },
-    { timestampUsec: 1, timestamp: 1 }
-  )) {
-    nbIterations += 1;
-    if (nbIterations % 1_000_000 == 0) {
-      console.log(doc._id);
-    }
-
-    // process
-    if (!doc.timestamp) {
-      console.log("!timestamp", doc);
-      process.exit(1);
-    }
-
-    doc.timestampUsec = undefined;
-
-    console.log(doc);
-
-    process.exit(1);
-    // doc.save();
-  }
-  process.stdout.write("\n");
-}
-
-// MEMO:
-// db.superchats.update({}, {$unset: {authorPhoto: 1}}, false, true);
-// const aggregate = await BanAction.aggregate([
-//   {
-//     $addFields: {
-//       created: {
-//         $toDate: "$timestampUsec",
-//       },
-//     },
-//   },
-// ]);
-// db.chats.update({}, {$unset: {timestampUsec: 1}}, false, true);
-// db.chats.createIndex({'timestamp': 1})
-// db.chats.getIndexes()
-// db.chats.find({timestamp: {$gte: new Date('2021-07-01')}, authorChannelId: '', originChannelId: ''}, {timestamp: 1, membership: 1, message: 1}).sort({timestamp: -1}).limit(1)
+# Complex query
+db.chats.find(
+  {timestamp: {$gte: new Date('2021-07-01')}, authorChannelId: 'a', originChannelId: 'b'},
+  {timestamp: 1, membership: 1, message: 1}
+).sort({timestamp: -1}).limit(1)
+*/

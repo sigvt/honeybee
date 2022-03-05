@@ -22,7 +22,7 @@ ps:
 	docker stack ps hb -f 'desired-state=running'
 
 sh:
-	docker run --rm --network ${HONEYBEE_NETWORK} -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/${MONGO_DATABASE} -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis -v $(CURDIR)/lib:/app/lib ${HONEYBEE_IMAGE} sh
+	docker run --rm --network ${HONEYBEE_NETWORK} -it -e MONGO_URI=mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/${MONGO_DATABASE} -e REDIS_URI=redis://:${REDIS_PASSWORD}@redis -v $(CURDIR)/lib:/app/lib -v /tmp/holodex:/holodexCache -e CACHE_PATH=/holodexCache ${HONEYBEE_IMAGE} sh
 
 logindb:
 	docker exec -it $$(docker ps --filter name=hb_mongo --format '{{.Names}}') mongo -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin ${MONGO_DATABASE}

@@ -4,21 +4,50 @@ import {
   delay,
   Masterchat,
   MasterchatError,
+  ReplaceChatItemAction,
   stringify,
+  YTEmojiRun,
+  YTLiveChatTextMessageRenderer,
 } from "masterchat";
 import { MongoError } from "mongodb";
 import { FetchError } from "node-fetch";
 import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
 import { ErrorCode, Result, Stats } from "../interfaces";
 import BanActionModel, { BanAction } from "../models/BanAction";
+import BannerActionModel, { BannerAction } from "../models/BannerAction";
 import ChatModel, { Chat } from "../models/Chat";
-import DeleteActionModel, { DeleteAction } from "../models/DeleteAction";
+import DeletionModel, { Deletion } from "../models/Deletion";
 import MembershipModel, { Membership } from "../models/Membership";
 import MilestoneModel, { Milestone } from "../models/Milestone";
+import ModeChangeModel, { ModeChange } from "../models/ModeChange";
+import PlaceholderModel, { Placeholder } from "../models/Placeholder";
 import SuperChatModel, { SuperChat } from "../models/SuperChat";
+import SuperStickerModel, { SuperSticker } from "../models/SuperSticker";
 import { initMongo } from "../modules/db";
 import { getQueueInstance, Job } from "../modules/queue";
 import { groupBy } from "../util";
+import { Membership as MCMembership } from "masterchat";
+
+function emojiHandler(run: YTEmojiRun) {
+  const { emoji } = run;
+
+  // https://codepoints.net/specials
+  const term = emoji.isCustomEmoji
+    ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
+    : emoji.emojiId;
+
+  return term;
+}
+
+function normalizeMembership(membership?: MCMembership) {
+  return membership ? membership.since ?? "new" : undefined;
+}
+
+const stringifyOptions = {
+  spaces: false,
+  emojiHandler,
+};
+const insertOptions = { ordered: false };
 
 async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   const {
@@ -41,14 +70,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   }
 
   async function handleActions(actions: Action[]) {
-    const actionsWithOrigin = actions.map((action) => ({
-      ...action,
-      originVideoId: mc.videoId,
-      originChannelId: mc.channelId,
-    }));
-
-    const groupedActions = groupBy(actionsWithOrigin, "type");
-    const insertOptions = { ordered: false };
+    const groupedActions = groupBy(actions, "type");
     const actionTypes = Object.keys(groupedActions) as Action["type"][];
 
     for (const type of actionTypes) {
@@ -56,24 +78,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         switch (type) {
           case "addChatItemAction": {
             const payload: Chat[] = groupedActions[type].map((action) => {
-              const normMessage = stringify(action.message, {
-                spaces: false,
-                emojiHandler: (run) => {
-                  const { emoji } = run;
-
-                  // https://codepoints.net/specials
-                  const term = emoji.isCustomEmoji
-                    ? `\uFFF9${
-                        emoji.shortcuts[emoji.shortcuts.length - 1]
-                      }\uFFFB`
-                    : emoji.emojiId;
-
-                  return term;
-                },
-              });
-              const normMembership = action.membership
-                ? action.membership.since ?? "new"
-                : undefined;
+              const normMessage = stringify(action.message, stringifyOptions);
+              const normMembership = normalizeMembership(action.membership);
               return {
                 timestamp: action.timestamp,
                 id: action.id,
@@ -84,52 +90,75 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                 isVerified: action.isVerified,
                 isOwner: action.isOwner,
                 isModerator: action.isModerator,
-                originVideoId: action.originVideoId,
-                originChannelId: action.originChannelId,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
               };
             });
             await ChatModel.insertMany(payload, insertOptions);
             break;
           }
           case "addSuperChatItemAction": {
-            const payload: SuperChat[] = groupedActions[type].map((action) => ({
-              timestamp: action.timestamp,
-              id: action.id,
-              message:
+            const payload: SuperChat[] = groupedActions[type].map((action) => {
+              const normMessage =
                 action.message && action.message.length > 0
-                  ? action.message
-                  : null,
-              purchaseAmount: action.amount,
-              currency: action.currency,
-              significance: action.significance,
-              color: action.color,
-              authorName: action.authorName,
-              authorChannelId: action.authorChannelId,
-              // authorPhoto: action.authorPhoto,
-              originVideoId: action.originVideoId,
-              originChannelId: action.originChannelId,
-            }));
+                  ? stringify(action.message, stringifyOptions)
+                  : null;
+
+              return {
+                timestamp: action.timestamp,
+                id: action.id,
+                message: normMessage,
+                purchaseAmount: action.amount,
+                currency: action.currency,
+                significance: action.significance,
+                color: action.color,
+                authorName: action.authorName,
+                authorChannelId: action.authorChannelId,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
+              };
+            });
             await SuperChatModel.insertMany(payload, insertOptions);
             break;
           }
-          case "markChatItemAsDeletedAction": {
-            const payload: DeleteAction[] = groupedActions[type].map(
-              (action) => ({
-                targetId: action.targetId,
-                retracted: action.retracted,
-                originVideoId: action.originVideoId,
-                originChannelId: action.originChannelId,
-                timestamp: action.timestamp,
-              })
+          case "addSuperStickerItemAction": {
+            const payload: SuperSticker[] = groupedActions[type].map(
+              (action) => {
+                return {
+                  timestamp: action.timestamp,
+                  id: action.id,
+                  authorName: action.authorName,
+                  authorChannelId: action.authorChannelId,
+                  amount: action.amount,
+                  currency: action.currency,
+                  text: action.stickerText,
+                  // significance: action.significance,
+                  // color: action.color,
+                  originVideoId: mc.videoId,
+                  originChannelId: mc.channelId,
+                };
+              }
             );
-            await DeleteActionModel.insertMany(payload, insertOptions);
+
+            await SuperStickerModel.insertMany(payload, insertOptions);
+            break;
+          }
+          case "markChatItemAsDeletedAction": {
+            const payload: Deletion[] = groupedActions[type].map((action) => ({
+              targetId: action.targetId,
+              retracted: action.retracted,
+              originVideoId: mc.videoId,
+              originChannelId: mc.channelId,
+              timestamp: action.timestamp,
+            }));
+            await DeletionModel.insertMany(payload, insertOptions);
             break;
           }
           case "markChatItemsByAuthorAsDeletedAction": {
             const payload: BanAction[] = groupedActions[type].map((action) => ({
               channelId: action.channelId,
-              originVideoId: action.originVideoId,
-              originChannelId: action.originChannelId,
+              originVideoId: mc.videoId,
+              originChannelId: mc.channelId,
               timestamp: action.timestamp,
             }));
             await BanActionModel.insertMany(payload, insertOptions);
@@ -143,8 +172,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                 since: action.membership.since,
                 authorName: action.authorName,
                 authorChannelId: action.authorChannelId,
-                originVideoId: action.originVideoId,
-                originChannelId: action.originChannelId,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
                 timestamp: action.timestamp,
               })
             );
@@ -152,41 +181,193 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             break;
           }
           case "addMembershipMilestoneItemAction": {
-            const payload: Milestone[] = groupedActions[type].map((action) => ({
-              id: action.id,
-              level: action.level,
-              duration: action.duration,
-              since: action.membership.since,
-              message: action.message,
-              authorName: action.authorName,
-              authorChannelId: action.authorChannelId,
-              originVideoId: action.originVideoId,
-              originChannelId: action.originChannelId,
-              timestamp: action.timestamp,
-            }));
+            const payload: Milestone[] = groupedActions[type].map((action) => {
+              const normMessage =
+                action.message && action.message.length > 0
+                  ? stringify(action.message, stringifyOptions)
+                  : null;
+
+              return {
+                id: action.id,
+                level: action.level,
+                duration: action.duration,
+                since: action.membership.since,
+                message: normMessage,
+                authorName: action.authorName,
+                authorChannelId: action.authorChannelId,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
+                timestamp: action.timestamp,
+              };
+            });
             await MilestoneModel.insertMany(payload, insertOptions);
             break;
           }
-          case "addBannerAction":
-          case "addMembershipTickerAction":
-          case "addPlaceholderItemAction":
-          case "addSuperChatTickerAction":
-          case "addSuperStickerItemAction":
-          case "addSuperStickerTickerAction":
-          case "addViewerEngagementMessageAction":
-          case "closePanelAction":
-          case "modeChangeAction":
-          case "removeBannerAction":
-          case "replaceChatItemAction":
-          case "showPanelAction":
-          case "showPollPanelAction":
-          case "showTooltipAction":
-          case "updatePollAction":
-            break;
-          default: {
-            const _exhaust: never = type;
+          case "addBannerAction": {
+            const payload: BannerAction[] = groupedActions[type].map(
+              (action) => {
+                const normTitle = stringify(action.title, stringifyOptions);
+                const normMessage = stringify(action.message, stringifyOptions);
+                const normMembership = normalizeMembership(action.membership);
+                return {
+                  timestamp: action.timestamp,
+                  actionId: action.id,
+                  title: normTitle,
+                  rawTitle: action.title,
+                  message: normMessage,
+                  authorName: action.authorName,
+                  authorChannelId: action.authorChannelId,
+                  membership: normMembership,
+                  isVerified: action.isVerified,
+                  isOwner: action.isOwner,
+                  isModerator: action.isModerator,
+                  originVideoId: mc.videoId,
+                  originChannelId: mc.channelId,
+                };
+              }
+            );
+
+            await BannerActionModel.insertMany(payload, insertOptions);
             break;
           }
+          case "modeChangeAction": {
+            const timestamp = new Date();
+            const payload: ModeChange[] = groupedActions[type].map((action) => {
+              return {
+                timestamp,
+                mode: action.mode,
+                enabled: action.enabled,
+                description: action.description,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
+              };
+            });
+
+            await ModeChangeModel.insertMany(payload, insertOptions);
+            break;
+          }
+          case "addPlaceholderItemAction": {
+            const payload: Placeholder[] = groupedActions[type].map(
+              (action) => {
+                return {
+                  timestamp: action.timestamp,
+                  id: action.id,
+                  originVideoId: mc.videoId,
+                  originChannelId: mc.channelId,
+                };
+              }
+            );
+
+            await PlaceholderModel.insertMany(payload, insertOptions);
+            break;
+          }
+          case "replaceChatItemAction": {
+            // TODO: setup model for the action
+            // const timestamp = new Date();
+
+            // const chatItems = groupedActions[type]
+            //   .filter(
+            //     (action) =>
+            //       "liveChatTextMessageRenderer" in action.replacementItem
+            //   )
+            //   .map((action) => {
+            //     const item =
+            //       action.replacementItem as unknown as YTLiveChatTextMessageRendererContainer;
+            //     const rdr = item.liveChatTextMessageRenderer;
+            //   });
+
+            for (const action of groupedActions[type]) {
+              const item = action.replacementItem;
+
+              if ("liveChatPlaceholderItemRenderer" in item) {
+                // TODO: add placeholder event
+                // await PlaceholderModel.insert(item, insertOptions);
+              } else if ("liveChatTextMessageRenderer" in item) {
+                // TODO: normalize renderers
+                const rdr = item.liveChatTextMessageRenderer;
+
+                const normMessage = stringify(rdr.message, stringifyOptions);
+
+                videoLog(
+                  "replaceChatItemAction(liveChatTextMessageRenderer)",
+                  rdr.authorExternalChannelId,
+                  stringify(rdr.authorName),
+                  normMessage
+                );
+                // const normMembership = normalizeMembership(action.membership);
+                // return {
+                //   timestamp: rdr.timestamp,
+                //   id: rdr.id,
+                //   message: normMessage,
+                //   authorName: rdr.authorName,
+                //   authorChannelId: rdr.authorExternalChannelId,
+                //   membership: normMembership,
+                //   isVerified: rdr.isVerified,
+                //   isOwner: rdr.isOwner,
+                //   isModerator: rdr.isModerator,
+                //   originVideoId: mc.videoId,
+                //   originChannelId: mc.channelId,
+                // };
+              }
+
+              // return {
+              //   timestamp,
+              //   targetItemId: action.targetItemId,
+              //   replacementItem: action.replacementItem,
+              //   originVideoId: mc.videoId,
+              //   originChannelId: mc.channelId,
+              // };
+            }
+            break;
+          }
+          case "addViewerEngagementMessageAction": {
+            // only handle poll results
+            const payload = groupedActions[type]
+              .filter((action) => action.messageType === "poll")
+              .map((action) => {
+                return {
+                  timestamp: action.timestamp,
+                  id: action.id,
+                  message: action.message,
+                  messageType: action.messageType,
+                  url: action.actionUrl,
+                  type: action.type,
+                  originVideoId: mc.videoId,
+                  originChannelId: mc.channelId,
+                };
+              });
+            if (payload.length > 0) {
+              videoLog("<!> pollActions", JSON.stringify(payload));
+              // TODO: await Poll.insertMany(payload, insertOptions);
+            }
+            break;
+          }
+          case "showPanelAction": {
+            const payload = groupedActions[type].map((action) => {
+              return {
+                panelToShow: action.panelToShow,
+                type: action.type,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
+              };
+            });
+
+            videoLog("<!> showPanelAction", JSON.stringify(payload));
+            break;
+          }
+          // case "closePanelAction":
+          // case "removeBannerAction":
+          // case "showPollPanelAction":
+          // case "updatePollAction":
+          // case "addMembershipTickerAction":
+          // case "addSuperChatTickerAction":
+          // case "addSuperStickerTickerAction":
+          // case "showTooltipAction":
+          //   break;
+          // default: {
+          //   const _exhaust: never = type;
+          //   break;
+          // }
         }
       } catch (err) {
         // insertedDocs: []

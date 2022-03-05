@@ -1,6 +1,6 @@
 import BanAction from "../models/BanAction";
 import Chat from "../models/Chat";
-import DeleteAction from "../models/DeleteAction";
+import DeleteAction from "../models/Deletion";
 import SuperChat from "../models/SuperChat";
 import { initMongo } from "../modules/db";
 import { getQueueInstance } from "../modules/queue";
@@ -8,6 +8,10 @@ import { groupBy } from "../util";
 import { CURRENCY_TO_TLS_MAP } from "../data/currency";
 import { Stats } from "../interfaces";
 import { fetchChannel } from "../modules/holodex";
+import Membership from "../models/Membership";
+import Milestone from "../models/Milestone";
+import SuperSticker from "../models/SuperSticker";
+import Placeholder from "../models/Placeholder";
 
 // https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_tutorial/
 
@@ -135,7 +139,11 @@ export async function metrics() {
     });
     await logCounts("ban", BanAction);
     await logCounts("chat", Chat);
+    await logCounts("placeholder", Placeholder);
+    await logCounts("membership", Membership);
+    await logCounts("milestone", Milestone);
     await logCounts("superchat", SuperChat);
+    await logCounts("supersticker", SuperSticker);
     await logCounts("superchat_country", SuperChat, {
       projection: { currency: 1 },
       agg: groupByCountry,
@@ -143,18 +151,8 @@ export async function metrics() {
 
     const { active, waiting, delayed, failed } = await queue.checkHealth();
 
-    const activeJobs = await queue.getJobs("active", { start: 0, end: 300 });
-
-    let warmingUp = 0;
-    for (const job of activeJobs) {
-      const progress: Stats = job.progress;
-      if (progress.isWarmingUp) warmingUp += 1;
-    }
-    const realActive = active - warmingUp;
-
     const metrics = {
-      active: realActive,
-      warmingUp,
+      active,
       waiting,
       delayed,
       failed,

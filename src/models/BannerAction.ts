@@ -1,12 +1,29 @@
-import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
+import {
+  getModelForClass,
+  modelOptions,
+  prop,
+  Severity,
+} from "@typegoose/typegoose";
 
-@modelOptions({ schemaOptions: { collection: "chats" } })
-export class Chat {
+@modelOptions({
+  options: { allowMixed: Severity.ALLOW },
+  schemaOptions: { collection: "banneractions" },
+})
+export class BannerAction {
+  @prop({ required: true, index: true })
+  public timestamp!: Date;
+
   @prop({ required: true, unique: true })
-  public id!: string;
+  public actionId!: string;
 
   @prop({ required: true })
-  public message!: string;
+  public title!: string;
+
+  @prop({ required: true })
+  public rawTitle!: any;
+
+  @prop()
+  public message?: string;
 
   @prop()
   public authorName?: string;
@@ -31,9 +48,6 @@ export class Chat {
 
   @prop({ required: true, index: true })
   public originChannelId!: string;
-
-  @prop({ required: true, index: true })
-  public timestamp!: Date;
 }
 
-export default getModelForClass(Chat);
+export default getModelForClass(BannerAction);

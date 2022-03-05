@@ -1,8 +1,9 @@
-import { getModelForClass, prop } from "@typegoose/typegoose";
+import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 
 // @index({ targetId: 1, originVideoId: 1 }, { unique: true })
-export class DeleteAction {
-  @prop({ required: true })
+@modelOptions({ schemaOptions: { collection: "deleteactions" } })
+export class Deletion {
+  @prop({ required: true, index: true })
   targetId!: string;
 
   @prop({ required: true })
@@ -18,4 +19,4 @@ export class DeleteAction {
   timestamp!: Date;
 }
 
-export default getModelForClass(DeleteAction);
+export default getModelForClass(Deletion);

@@ -6,10 +6,22 @@ import {
 } from "@typegoose/typegoose";
 import { YTRun } from "masterchat";
 
-@modelOptions({ options: { allowMixed: Severity.ALLOW } })
+@modelOptions({
+  options: { allowMixed: Severity.ALLOW },
+  schemaOptions: { collection: "milestones" },
+})
 export class Milestone {
   @prop({ required: true, unique: true })
   public id!: string;
+
+  @prop({ required: true })
+  public message!: string | null;
+
+  @prop({ required: true })
+  public authorName!: string;
+
+  @prop({ required: true, index: true })
+  public authorChannelId!: string;
 
   @prop()
   public level?: string;
@@ -19,15 +31,6 @@ export class Milestone {
 
   @prop()
   public since?: string;
-
-  @prop({ allowMixed: true })
-  public message?: YTRun[] | null;
-
-  @prop({ required: true })
-  public authorName!: string;
-
-  @prop({ required: true, index: true })
-  public authorChannelId!: string;
 
   @prop({ required: true })
   public originVideoId!: string;

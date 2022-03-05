@@ -1,8 +1,9 @@
-import { getModelForClass, prop } from "@typegoose/typegoose";
+import { getModelForClass, modelOptions, prop } from "@typegoose/typegoose";
 
 // @index({ channelId: 1, originVideoId: 1 }, { unique: true })
+@modelOptions({ schemaOptions: { collection: "banactions" } })
 export class BanAction {
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   channelId!: string;
 
   @prop({ required: true })

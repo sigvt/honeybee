@@ -17,7 +17,6 @@
   "dependencies": {
     "@typegoose/typegoose": "^9.0.1",
     "bee-queue": "^1.4.0",
-    "chalk": "^4.1.2",
     "cli-color": "^2.0.1",
     "clui": "^0.3.6",
     "execa": "^5.1.1",
