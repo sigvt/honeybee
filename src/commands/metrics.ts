@@ -149,9 +149,18 @@ export async function metrics() {
       agg: groupByCountry,
     });
 
+    const chatTotal = await Chat.estimatedDocumentCount();
+    const superchatTotal = await SuperChat.estimatedDocumentCount();
+    const banTotal = await BanAction.estimatedDocumentCount();
+    const deletionTotal = await DeleteAction.estimatedDocumentCount();
+
     const { active, waiting, delayed, failed } = await queue.checkHealth();
 
     const metrics = {
+      chatTotal,
+      superchatTotal,
+      deletionTotal,
+      banTotal,
       active,
       waiting,
       delayed,
