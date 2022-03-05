@@ -6,7 +6,6 @@ import { initMongo } from "../modules/db";
 import { getQueueInstance } from "../modules/queue";
 import { groupBy } from "../util";
 import { CURRENCY_TO_TLS_MAP } from "../data/currency";
-import { Stats } from "../interfaces";
 import { fetchChannel } from "../modules/holodex";
 import Membership from "../models/Membership";
 import Milestone from "../models/Milestone";
@@ -137,8 +136,8 @@ export async function metrics() {
     await logCounts("deletion", DeleteAction, {
       criteria: { retracted: false },
     });
-    await logCounts("ban", BanAction);
     await logCounts("chat", Chat);
+    await logCounts("ban", BanAction);
     await logCounts("placeholder", Placeholder);
     await logCounts("membership", Membership);
     await logCounts("milestone", Milestone);

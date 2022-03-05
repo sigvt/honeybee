@@ -4,10 +4,9 @@ import {
   delay,
   Masterchat,
   MasterchatError,
-  ReplaceChatItemAction,
+  Membership as MCMembership,
   stringify,
   YTEmojiRun,
-  YTLiveChatTextMessageRenderer,
 } from "masterchat";
 import { MongoError } from "mongodb";
 import { FetchError } from "node-fetch";
@@ -26,15 +25,15 @@ import SuperStickerModel, { SuperSticker } from "../models/SuperSticker";
 import { initMongo } from "../modules/db";
 import { getQueueInstance, Job } from "../modules/queue";
 import { groupBy } from "../util";
-import { Membership as MCMembership } from "masterchat";
 
 function emojiHandler(run: YTEmojiRun) {
   const { emoji } = run;
 
   // https://codepoints.net/specials
-  const term = emoji.isCustomEmoji
-    ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
-    : emoji.emojiId;
+  const term =
+    emoji.isCustomEmoji || emoji.emojiId === ""
+      ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
+      : emoji.emojiId;
 
   return term;
 }
@@ -78,7 +77,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         switch (type) {
           case "addChatItemAction": {
             const payload: Chat[] = groupedActions[type].map((action) => {
-              const normMessage = stringify(action.message, stringifyOptions);
+              const normMessage = stringify(action.message!, stringifyOptions);
               const normMembership = normalizeMembership(action.membership);
               return {
                 timestamp: action.timestamp,
@@ -262,9 +261,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             break;
           }
           case "replaceChatItemAction": {
-            // TODO: setup model for the action
+            // TODO: group payloads by item type
             // const timestamp = new Date();
-
             // const chatItems = groupedActions[type]
             //   .filter(
             //     (action) =>
@@ -279,82 +277,76 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             for (const action of groupedActions[type]) {
               const item = action.replacementItem;
 
-              if ("liveChatPlaceholderItemRenderer" in item) {
-                // TODO: add placeholder event
-                // await PlaceholderModel.insert(item, insertOptions);
-              } else if ("liveChatTextMessageRenderer" in item) {
-                // TODO: normalize renderers
-                const rdr = item.liveChatTextMessageRenderer;
-
-                const normMessage = stringify(rdr.message, stringifyOptions);
-
-                videoLog(
-                  "replaceChatItemAction(liveChatTextMessageRenderer)",
-                  rdr.authorExternalChannelId,
-                  stringify(rdr.authorName),
-                  normMessage
-                );
-                // const normMembership = normalizeMembership(action.membership);
-                // return {
-                //   timestamp: rdr.timestamp,
-                //   id: rdr.id,
-                //   message: normMessage,
-                //   authorName: rdr.authorName,
-                //   authorChannelId: rdr.authorExternalChannelId,
-                //   membership: normMembership,
-                //   isVerified: rdr.isVerified,
-                //   isOwner: rdr.isOwner,
-                //   isModerator: rdr.isModerator,
-                //   originVideoId: mc.videoId,
-                //   originChannelId: mc.channelId,
-                // };
+              switch (item.type) {
+                case "addChatItemAction": {
+                  const normMessage = stringify(
+                    item.message!,
+                    stringifyOptions
+                  );
+                  const normMembership = normalizeMembership(item.membership);
+                  const payload = {
+                    timestamp: item.timestamp,
+                    id: item.id,
+                    message: normMessage,
+                    authorName: item.authorName,
+                    authorChannelId: item.authorChannelId,
+                    membership: normMembership,
+                    isVerified: item.isVerified,
+                    isOwner: item.isOwner,
+                    isModerator: item.isModerator,
+                    originVideoId: mc.videoId,
+                    originChannelId: mc.channelId,
+                  };
+                  videoLog("<!> replaceItem(Chat)", JSON.stringify(payload));
+                  await ChatModel.create(payload);
+                  break;
+                }
+                case "addSuperChatItemAction": {
+                  const normMessage =
+                    item.message && item.message.length > 0
+                      ? stringify(item.message, stringifyOptions)
+                      : null;
+                  const payload = {
+                    timestamp: item.timestamp,
+                    id: item.id,
+                    message: normMessage,
+                    purchaseAmount: item.amount,
+                    currency: item.currency,
+                    significance: item.significance,
+                    color: item.color,
+                    authorName: item.authorName,
+                    authorChannelId: item.authorChannelId,
+                    originVideoId: mc.videoId,
+                    originChannelId: mc.channelId,
+                  };
+                  videoLog(
+                    "<!> replaceItem(SuperChat)",
+                    JSON.stringify(payload)
+                  );
+                  // TODO: await SuperChatModel.create(payload);
+                }
+                case "addPlaceholderItemAction": {
+                }
               }
-
-              // return {
-              //   timestamp,
-              //   targetItemId: action.targetItemId,
-              //   replacementItem: action.replacementItem,
-              //   originVideoId: mc.videoId,
-              //   originChannelId: mc.channelId,
-              // };
             }
             break;
           }
-          case "addViewerEngagementMessageAction": {
-            // only handle poll results
-            const payload = groupedActions[type]
-              .filter((action) => action.messageType === "poll")
-              .map((action) => {
-                return {
-                  timestamp: action.timestamp,
-                  id: action.id,
-                  message: action.message,
-                  messageType: action.messageType,
-                  url: action.actionUrl,
-                  type: action.type,
-                  originVideoId: mc.videoId,
-                  originChannelId: mc.channelId,
-                };
-              });
-            if (payload.length > 0) {
-              videoLog("<!> pollActions", JSON.stringify(payload));
-              // TODO: await Poll.insertMany(payload, insertOptions);
-            }
-            break;
-          }
-          case "showPanelAction": {
+          case "addPollResultAction": {
             const payload = groupedActions[type].map((action) => {
               return {
-                panelToShow: action.panelToShow,
-                type: action.type,
+                id: action.id,
+                question: action.question,
+                total: action.total,
+                choices: action.choices,
                 originVideoId: mc.videoId,
                 originChannelId: mc.channelId,
               };
             });
-
-            videoLog("<!> showPanelAction", JSON.stringify(payload));
-            break;
+            videoLog("<!> pollResult", JSON.stringify(payload));
+            // TODO: await Poll.insertMany(payload, insertOptions);
           }
+          // case "addViewerEngagementMessageAction":
+          // case "showPanelAction":
           // case "closePanelAction":
           // case "removeBannerAction":
           // case "showPollPanelAction":
@@ -362,6 +354,8 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
           // case "addMembershipTickerAction":
           // case "addSuperChatTickerAction":
           // case "addSuperStickerTickerAction":
+          // case "membershipGiftPurchaseAction":
+          // case "membershipGiftRedemptionAction":
           // case "showTooltipAction":
           //   break;
           // default: {

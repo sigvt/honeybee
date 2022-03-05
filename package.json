@@ -20,7 +20,7 @@
     "cli-color": "^2.0.1",
     "clui": "^0.3.6",
     "execa": "^5.1.1",
-    "masterchat": "0.13.0",
+    "masterchat": "0.14.0",
     "mongoose": "~6.0.7",
     "node-fetch": "^2.0",
     "node-schedule": "^2.0.0",

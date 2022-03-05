@@ -17,8 +17,8 @@ export class Milestone {
   @prop({ required: true })
   public message!: string | null;
 
-  @prop({ required: true })
-  public authorName!: string;
+  @prop()
+  public authorName?: string;
 
   @prop({ required: true, index: true })
   public authorChannelId!: string;
