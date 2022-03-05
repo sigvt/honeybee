@@ -1,5 +1,11 @@
 import BeeQueue from "bee-queue";
-import { Action, delay, Masterchat, MasterchatError } from "masterchat";
+import {
+  Action,
+  delay,
+  Masterchat,
+  MasterchatError,
+  stringify,
+} from "masterchat";
 import { MongoError } from "mongodb";
 import { FetchError } from "node-fetch";
 import { JOB_CONCURRENCY, SHUTDOWN_TIMEOUT } from "../constants";
@@ -49,20 +55,39 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
       try {
         switch (type) {
           case "addChatItemAction": {
-            const payload: Chat[] = groupedActions[type].map((action) => ({
-              timestamp: action.timestamp,
-              id: action.id,
-              message: action.message,
-              membership: action.membership,
-              authorName: action.authorName,
-              authorChannelId: action.authorChannelId,
-              // authorPhoto: action.authorPhoto,
-              isVerified: action.isVerified,
-              isOwner: action.isOwner,
-              isModerator: action.isModerator,
-              originVideoId: action.originVideoId,
-              originChannelId: action.originChannelId,
-            }));
+            const payload: Chat[] = groupedActions[type].map((action) => {
+              const normMessage = stringify(action.message, {
+                spaces: false,
+                emojiHandler: (run) => {
+                  const { emoji } = run;
+
+                  // https://codepoints.net/specials
+                  const term = emoji.isCustomEmoji
+                    ? `\uFFF9${
+                        emoji.shortcuts[emoji.shortcuts.length - 1]
+                      }\uFFFB`
+                    : emoji.emojiId;
+
+                  return term;
+                },
+              });
+              const normMembership = action.membership
+                ? action.membership.since ?? "new"
+                : undefined;
+              return {
+                timestamp: action.timestamp,
+                id: action.id,
+                message: normMessage,
+                authorName: action.authorName,
+                authorChannelId: action.authorChannelId,
+                membership: normMembership,
+                isVerified: action.isVerified,
+                isOwner: action.isOwner,
+                isModerator: action.isModerator,
+                originVideoId: action.originVideoId,
+                originChannelId: action.originChannelId,
+              };
+            });
             await ChatModel.insertMany(payload, insertOptions);
             break;
           }
