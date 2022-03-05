@@ -1212,12 +1212,12 @@ cron-parser@^3.1.0:
     is-nan "^1.3.2"
     luxon "^1.26.0"
 
-cross-fetch@^3.1.4:
-  version "3.1.4"
-  resolved "https://registry.npmjs.org/cross-fetch/-/cross-fetch-3.1.4.tgz#9723f3a3a247bf8b89039f3a380a9244e8fa2f39"
-  integrity sha512-1eAtFWdIubi6T4XPy6ei9iUFoKpUkIF971QLN8lIvvvwueI65+Nw5haMNKUwfJxabqlIIDODJKGrQ66gxC0PbQ==
+cross-fetch@^3.1.5:
+  version "3.1.5"
+  resolved "https://registry.npmjs.org/cross-fetch/-/cross-fetch-3.1.5.tgz#e1389f44d9e7ba767907f7af8454787952ab534f"
+  integrity sha512-lvb1SBsI0Z7GDwmuid+mU3kWVBwTVUbe7S0H52yaaAdQOXq2YktTCZdlAcNKFzE6QtRz0snpw9bNiPeOIkkQvw==
   dependencies:
-    node-fetch "2.6.1"
+    node-fetch "2.6.7"
 
 cross-spawn@^7.0.3:
   version "7.0.3"
@@ -2426,6 +2426,11 @@ json5@2.x, json5@^2.1.2:
   dependencies:
     minimist "^1.2.5"
 
+kafkajs@^1.16.0:
+  version "1.16.0"
+  resolved "https://registry.npmjs.org/kafkajs/-/kafkajs-1.16.0.tgz#bfcc3ae2b69265ca8435b53a01ee9e8787b9fee5"
+  integrity sha512-+Rcfu2hyQ/jv5skqRY8xA7Ra+mmRkDAzCaLDYbkGtgsNKpzxPWiLbk8ub0dgr4EbWrN1Zb4BCXHUkD6+zYfdWg==
+
 kareem@2.3.2:
   version "2.3.2"
   resolved "https://registry.npmjs.org/kareem/-/kareem-2.3.2.tgz#78c4508894985b8d38a0dc15e1a8e11078f2ca93"
@@ -2519,12 +2524,12 @@ makeerror@1.0.x:
   dependencies:
     tmpl "1.0.x"
 
-masterchat@0.13.0:
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/masterchat/-/masterchat-0.13.0.tgz#601d8277300be7af3fd7533a0a5a2063b2ffa9e7"
-  integrity sha512-241gsVUXmenVaYjG2JjYCnA+diI8LbMrhDyi0l6iv0LcF62E6PXVaAavEN+QzdzzBDW3N5QFGyjOWabsLw370g==
+masterchat@0.14.0:
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/masterchat/-/masterchat-0.14.0.tgz#7091fa6c52e762bc0fe9a70b4015e403b66bcede"
+  integrity sha512-8VPpBD0Q1Kg36K1YiGP/R+yCq4autWFDsLQBqn7m8QnKKH0nYM7puWIxkaVudU9MkDfXIjGDYEVohio5QCxK/g==
   dependencies:
-    cross-fetch "^3.1.4"
+    cross-fetch "^3.1.5"
     debug "^4.3.2"
     sha1 "^1.1.1"
 
@@ -2750,10 +2755,12 @@ nock@^13.1.4:
     lodash.set "^4.3.2"
     propagate "^2.0.0"
 
-node-fetch@2.6.1:
-  version "2.6.1"
-  resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.6.1.tgz#045bd323631f76ed2e2b55573394416b639a0052"
-  integrity sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==
+node-fetch@2.6.7:
+  version "2.6.7"
+  resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
+  integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
+  dependencies:
+    whatwg-url "^5.0.0"
 
 node-fetch@^2.0:
   version "2.6.5"
@@ -3540,6 +3547,11 @@ util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=
+
+uuid@^8.3.2:
+  version "8.3.2"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
+  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 v8-to-istanbul@^8.1.0:
   version "8.1.0"

@@ -9,7 +9,7 @@ docker-compose build
 docker-compose up
 ```
 
-### inspect
+### Inspect
 
 ```bash
 MONGO_URI=mongodb://localhost/honeybee lib/index.js inspect
@@ -45,13 +45,13 @@ db.createUser({
 sed -i "s/MONGO_WORKER_PASSWORD=/MONGO_WORKER_PASSWORD=<password>/" .env
 ```
 
-## Show cluster health
+## Cluster health
 
 ```bash
 make health
 ```
 
-## MongoDB Query
+## MongoDB
 
 ```js
 db.chats.aggregate([
@@ -77,4 +77,70 @@ db.chats.aggregate([
   { $match: { msg: { $ne: null } } },
   { $sort: { timestamp: 1 } },
 ]);
+```
+
+## MongoDB Change Stream
+
+### Subscribe change stream
+
+```js
+const mongoose = require("mongoose");
+const Chat = require("./lib/models/Chat.js").default;
+const Deletion = require("./lib/models/Deletion.js").default;
+const BanAction = require("./lib/models/BanAction.js").default;
+
+async function main() {
+  await mongoose.connect("mongodb://localhost/honeybee");
+
+  Deletion.watch([
+    {
+      $match: { operationType: "insert", "fullDocument.retracted": false },
+    },
+  ]).on("change", async ({ fullDocument }) => {
+    const chat = await Chat.findOne({ id: fullDocument.targetId });
+    console.log("deleted", chat);
+  });
+
+  BanAction.watch([
+    {
+      $match: { operationType: "insert" },
+    },
+  ]).on("change", async ({ fullDocument }) => {
+    const chat = await Chat.findOne({
+      authorChannelId: fullDocument.channelId,
+    });
+    console.log("banned", chat);
+  });
+}
+
+main();
+```
+
+## Redpanda (Go-based Kafka)
+
+```bash
+docker-compose exec redpanda rpk redpanda mode production
+# docker-compose exec redpanda rpk redpanda tune all
+
+# Show
+docker-compose exec redpanda rpk cluster info
+
+# List
+docker-compose exec redpanda rpk topic list
+
+# Consume
+docker-compose exec redpanda rpk topic consume honeybee.chats
+
+# Delete
+docker-compose exec redpanda rpk topic delete honeybee.chats
+```
+
+## MongoDB Kafka Connector
+
+```bash
+# List
+curl -X GET http://localhost:8083/connectors
+
+# Delete
+curl -X DELETE http://localhost:8083/connectors/mongo-source
 ```

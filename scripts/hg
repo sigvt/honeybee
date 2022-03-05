@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+// honeybee grep
+// - hg chats
+// - hg chats authorChannelId=UChAnqc_AY5_I3Px5dig3X1Q
+// - hg chats originVideoId=ABCDEFG
+// - hg ban_event
+
+const mongoose = require("mongoose");
+const chalk = require("chalk");
+
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost/honeybee";
+
+function capitalize(str) {
+  return str
+    .split("_")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join("");
+}
+
+function parseQuery(qs) {
+  return Object.fromEntries(qs.map((q) => q.split("=")));
+}
+
+function pprint(msg) {
+  const { id, authorName, message, timestamp, originChannelId, originVideoId } =
+    msg;
+  console.log(
+    chalk.gray(`[${timestamp.toLocaleString()}]`).padEnd(36, " ") +
+      `${authorName}: ${message}`
+  );
+}
+
+async function main(argv) {
+  if (argv.length < 1) {
+    throw new Error("Usage: hg <model> [query]");
+  }
+
+  const query = parseQuery(argv.slice(1));
+  console.log("Query:", query);
+
+  await mongoose.connect(MONGO_URI);
+
+  const modelName = capitalize(argv[0]);
+  const modelPath = `../lib/models/${modelName}.js`;
+  const model = require(modelPath).default;
+
+  const transformer =
+    modelName === "Chat" ? pprint : (...args) => console.log(...args);
+
+  const result = await model.find(query).limit(100).sort({ $natural: -1 });
+  result.reverse().map(transformer);
+  mongoose.disconnect();
+}
+
+main(process.argv.slice(2));

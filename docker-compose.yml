@@ -3,6 +3,8 @@ version: "3"
 services:
   db:
     image: mongo:5
+    # command: --replSet hb0 --bind_ip_all
+    command: --replSet hb0 --bind_ip localhost,db
     ports:
       - "27017:27017"
     volumes:
@@ -22,7 +24,7 @@ services:
     command: honeybee scheduler
     environment:
       REDIS_URI: redis://redis
-      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-3}
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY}
       HOLODEX_MAX_UPCOMING_HOURS: ${HOLODEX_MAX_UPCOMING_HOURS:-0}
       HOLODEX_API_KEY: ${HOLODEX_API_KEY}
     volumes:
@@ -37,7 +39,7 @@ services:
     environment:
       REDIS_URI: redis://redis
       MONGO_URI: mongodb://db/honeybee
-      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-3}
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY}
       DEBUG: masterchat
     volumes:
       - "./lib:/app/lib"
@@ -45,3 +47,35 @@ services:
     depends_on:
       - redis
       - db
+
+  # Kafka-compatible data streaming pipeline
+  redpanda:
+    image: docker.vectorized.io/vectorized/redpanda:latest
+    command: redpanda start --smp '1' --reserve-memory 0M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
+    ports:
+      - "9093:9093"
+
+  # MongoDB Kafka Connector
+  connect:
+    build: docker/mongodb-kafka-connector
+    depends_on:
+      - redpanda
+    ports:
+      - "8083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "redpanda:9092"
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: connect
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
+      CONNECT_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      
