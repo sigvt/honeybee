@@ -1,11 +1,11 @@
 /tmp
 /lib
 /keys
-__nock-fixtures__
 .env
 .envrc
 .vscode
 /data*
+__nock-fixtures__
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
 # Edit at https://www.toptal.com/developers/gitignore?templates=node

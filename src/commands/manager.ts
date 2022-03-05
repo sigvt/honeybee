@@ -116,7 +116,7 @@ export async function runManager() {
     );
 
     schedule.scheduleJob("10 */1 * * *", rearrange);
-    schedule.scheduleJob("10 */6 * * *", sweep);
+    //schedule.scheduleJob("10 */6 * * *", sweep);
     await rearrange(new Date());
   });
 }

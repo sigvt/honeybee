@@ -24,7 +24,7 @@ vim .env
 mkdir -p $DATA_DIR/{redis,mongo,cache}
 
 docker swarm init --advertise-addr $(curl -s https://api.ipify.org)
-docker network create -d overlay --attachable honeybee
+docker network create -d overlay --attachable --subnet=<cidr-addr> honeybee
 docker stack deploy -c docker-compose.production.yml hb
 ```
 

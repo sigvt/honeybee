@@ -95,5 +95,5 @@ services:
 
 networks:
   default:
-    name: honeybee
+    name: ${HONEYBEE_NETWORK}
     external: true
