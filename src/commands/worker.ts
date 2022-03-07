@@ -261,71 +261,82 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             break;
           }
           case "replaceChatItemAction": {
-            // TODO: group payloads by item type
-            // const timestamp = new Date();
-            // const chatItems = groupedActions[type]
-            //   .filter(
-            //     (action) =>
-            //       "liveChatTextMessageRenderer" in action.replacementItem
-            //   )
-            //   .map((action) => {
-            //     const item =
-            //       action.replacementItem as unknown as YTLiveChatTextMessageRendererContainer;
-            //     const rdr = item.liveChatTextMessageRenderer;
-            //   });
+            const replacementItems = groupedActions[type].map(
+              (act) => act.replacementItem
+            );
+            const groupedItems = groupBy(replacementItems, "type");
+            const itemTypes = Object.keys(groupedItems) as Action["type"][];
 
-            for (const action of groupedActions[type]) {
-              const item = action.replacementItem;
-
-              switch (item.type) {
+            for (const itemType of itemTypes) {
+              switch (itemType) {
                 case "addChatItemAction": {
-                  const normMessage = stringify(
-                    item.message!,
-                    stringifyOptions
+                  const payload: Chat[] = groupedItems[itemType].map((item) => {
+                    const normMessage = stringify(
+                      item.message!,
+                      stringifyOptions
+                    );
+                    const normMembership = normalizeMembership(item.membership);
+                    return {
+                      timestamp: item.timestamp,
+                      id: item.id,
+                      message: normMessage,
+                      authorName: item.authorName,
+                      authorChannelId: item.authorChannelId,
+                      membership: normMembership,
+                      isVerified: item.isVerified,
+                      isOwner: item.isOwner,
+                      isModerator: item.isModerator,
+                      originVideoId: mc.videoId,
+                      originChannelId: mc.channelId,
+                    };
+                  });
+                  videoLog(
+                    "replaceChat:",
+                    payload.map((p) => p.id)
                   );
-                  const normMembership = normalizeMembership(item.membership);
-                  const payload = {
-                    timestamp: item.timestamp,
-                    id: item.id,
-                    message: normMessage,
-                    authorName: item.authorName,
-                    authorChannelId: item.authorChannelId,
-                    membership: normMembership,
-                    isVerified: item.isVerified,
-                    isOwner: item.isOwner,
-                    isModerator: item.isModerator,
-                    originVideoId: mc.videoId,
-                    originChannelId: mc.channelId,
-                  };
-                  //videoLog("<!> replaceItem(Chat)", JSON.stringify(payload));
-                  await ChatModel.create(payload);
+                  await ChatModel.insertMany(payload, insertOptions);
                   break;
                 }
                 case "addSuperChatItemAction": {
-                  const normMessage =
-                    item.message && item.message.length > 0
-                      ? stringify(item.message, stringifyOptions)
-                      : null;
-                  const payload = {
-                    timestamp: item.timestamp,
-                    id: item.id,
-                    message: normMessage,
-                    purchaseAmount: item.amount,
-                    currency: item.currency,
-                    significance: item.significance,
-                    color: item.color,
-                    authorName: item.authorName,
-                    authorChannelId: item.authorChannelId,
-                    originVideoId: mc.videoId,
-                    originChannelId: mc.channelId,
-                  };
-                  videoLog(
-                    "<!> replaceItem(SuperChat)",
-                    JSON.stringify(payload)
+                  const payload: SuperChat[] = groupedItems[itemType].map(
+                    (item) => {
+                      const normMessage =
+                        item.message && item.message.length > 0
+                          ? stringify(item.message, stringifyOptions)
+                          : null;
+                      return {
+                        timestamp: item.timestamp,
+                        id: item.id,
+                        message: normMessage,
+                        purchaseAmount: item.amount,
+                        currency: item.currency,
+                        significance: item.significance,
+                        color: item.color,
+                        authorName: item.authorName,
+                        authorChannelId: item.authorChannelId,
+                        originVideoId: mc.videoId,
+                        originChannelId: mc.channelId,
+                      };
+                    }
                   );
-                  // TODO: await SuperChatModel.create(payload);
+                  videoLog("<!> replaceSuperChat:", payload);
+                  // TODO
+                  // await SuperChatModel.insertMany(payload, insertOptions);
+                  break;
                 }
                 case "addPlaceholderItemAction": {
+                  const payload: Placeholder[] = groupedItems[itemType].map(
+                    (item) => {
+                      return {
+                        timestamp: item.timestamp,
+                        id: item.id,
+                        originVideoId: mc.videoId,
+                        originChannelId: mc.channelId,
+                      };
+                    }
+                  );
+                  // videoLog("<!> replacePlaceholder:", payload.length);
+                  await PlaceholderModel.insertMany(payload, insertOptions);
                 }
               }
             }
@@ -373,21 +384,21 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
         if (err instanceof MongoError) {
           if (err.code === 11000) {
             videoLog(
-              `rescued ${(err as any).insertedDocs.length} chat(s) (${
-                err.message
-              })`
+              `DUPES ${(err as any).writeErrors?.length || 0} while handling ${
+                (err as any).insertedDocs?.length || 0
+              } ${type}s`
             );
             continue;
           } else {
             videoLog(
-              `<!> unrecognized mongo error: code=${err.code} msg=${err.errmsg} labels=${err.errorLabels}`
+              `<!> Unrecognized mongo error: code=${err.code} msg=${err.errmsg} labels=${err.errorLabels} type=${type}`
             );
           }
         } else if (err instanceof FetchError) {
           // getaddrinfo ENOTFOUND mongo
-          videoLog("fetch error", err.type, err.code, err.errno, err.message);
+          videoLog("<!> FetchError", err, type);
         } else if (err instanceof Error) {
-          videoLog("unrecognized error", err.name, err.message);
+          videoLog("<!> Unrecognized Error", err, err.stack, type);
           process.exit(1);
         }
 
@@ -411,14 +422,13 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
   stats.isWarmingUp = false;
   job.reportProgress(stats);
 
-  videoLog(`start processing live chats (buffer: ${randomTimeoutMs}ms)`);
+  videoLog(`START after=${randomTimeoutMs}ms`);
 
   // iterate over live chat
   try {
     for await (const { actions } of mc.iterate()) {
-      if (actions.length > 0) {
-        await handleActions(actions);
-      }
+      if (actions.length === 0) continue;
+      await handleActions(actions);
     }
   } catch (err) {
     if (err instanceof MasterchatError) {
@@ -453,10 +463,11 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     job.backoff("fixed", 30 * 1000);
 
     // unrecognized errors
+    videoLog("<!> [FATAL]", err);
     throw err;
   }
 
-  videoLog(`live stream ended`);
+  videoLog(`END`);
   return { error: null, result: stats };
 }
 

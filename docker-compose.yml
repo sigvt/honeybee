@@ -3,6 +3,7 @@ version: "3.9"
 services:
   mongo:
     image: mongo:5
+    hostname: mongo
     # command: --replSet hb0 --bind_ip localhost,mongo
     command: --replSet hb0 --bind_ip_all
     ports:
@@ -39,7 +40,7 @@ services:
     image: ${HONEYBEE_IMAGE}
     environment:
       REDIS_URI: redis://redis
-      MONGO_URI: mongodb://db/honeybee
+      MONGO_URI: mongodb://mongo/honeybee
       JOB_CONCURRENCY: ${JOB_CONCURRENCY}
       DEBUG: masterchat
     volumes:
