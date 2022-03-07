@@ -81,6 +81,28 @@ db.chats.aggregate([
 
 ## MongoDB Change Stream
 
+### Enable replica set
+
+[Convert a Standalone to a Replica Set — MongoDB Manual](https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/)
+
+```bash
+openssl rand -base64 756 > /path/to/keyfile
+chmod 400 /path/to/keyfile
+chown 999:999 /path/to/keyfile
+echo "MONGO_RS_KEYFILE=/path/to/keyfile" >> .env
+
+make deploy
+make logindb
+```
+
+then:
+
+```js
+rs.initiate();
+rs.conf();
+rs.status();
+```
+
 ### Subscribe change stream
 
 ```js

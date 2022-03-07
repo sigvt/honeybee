@@ -17,9 +17,9 @@ COPY src /app/src
 RUN yarn build && yarn link
 
 # terraform init
-COPY tf /app/tf
-WORKDIR /app/tf
-RUN terraform init -no-color -input=false
-WORKDIR /app
+# COPY tf /app/tf
+# WORKDIR /app/tf
+# RUN terraform init -no-color -input=false
+# WORKDIR /app
 
 CMD ["honeybee", "worker"]

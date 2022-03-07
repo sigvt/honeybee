@@ -15,28 +15,32 @@ while : ; do
   sleep 5
 done
 
-echo "Creating a source 🥫"
 # https://docs.mongodb.com/kafka-connector/master/quick-start/
 # https://docs.mongodb.com/kafka-connector/current/source-connector/configuration-properties
 # https://docs.mongodb.com/kafka-connector/v1.3/introduction/converters/#std-label-string-converter-sample-properties
-curl -X POST -H "Content-Type: application/json" $HOST -d '
+echo "Creating a source 🥫"
+
+curl -X POST -H "Content-Type: application/json" $HOST -d "
 {
-    "name": "mongo-source",
-    "config": {
-        "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
-        "connection.uri": "mongodb://db:27017/?replicaSet=hb0",
-        "database": "honeybee",
-        "collection": "chats",
-        "output.json.formatter": "com.mongodb.kafka.connect.source.json.formatter.SimplifiedJson",
-        "output.format.value": "json",
-        "output.format.key": "json",
-        "key.converter.schemas.enable": false,
-        "value.converter.schemas.enable": false,
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "publish.full.document.only": true,
-        "pipeline": "[{\"$match\": {\"operationType\": \"insert\"}}]"
+    \"name\": \"mongo-source\",
+    \"config\": {
+        \"connector.class\": \"com.mongodb.kafka.connect.MongoSourceConnector\",
+        \"connection.uri\": \"${MONGO_URI}\",
+        \"database\": \"${MONGO_DATABASE}\",
+        \"collection\": \"chats\",
+        \"output.json.formatter\": \"com.mongodb.kafka.connect.source.json.formatter.SimplifiedJson\",
+        \"output.format.value\": \"json\",
+        \"output.format.key\": \"json\",
+        \"key.converter.schemas.enable\": false,
+        \"value.converter.schemas.enable\": false,
+        \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",
+        \"value.converter\": \"org.apache.kafka.connect.storage.StringConverter\",
+        \"publish.full.document.only\": true,
+        \"pipeline\": \"[{\\\"\$match\\\": {\\\"operationType\\\": \\\"insert\\\"}}]\"
     }
-}'
+}
+" -w "\n"
+
+echo "Initialization completed ✨"
 
 sleep infinity

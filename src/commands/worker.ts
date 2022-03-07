@@ -297,7 +297,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                     originVideoId: mc.videoId,
                     originChannelId: mc.channelId,
                   };
-                  videoLog("<!> replaceItem(Chat)", JSON.stringify(payload));
+                  //videoLog("<!> replaceItem(Chat)", JSON.stringify(payload));
                   await ChatModel.create(payload);
                   break;
                 }
@@ -372,11 +372,15 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
 
         if (err instanceof MongoError) {
           if (err.code === 11000) {
-            videoLog(`rescued ${(err as any).insertedDocs.length} chat(s)`);
+            videoLog(
+              `rescued ${(err as any).insertedDocs.length} chat(s) (${
+                err.message
+              })`
+            );
             continue;
           } else {
             videoLog(
-              `unrecognized mongo error: code=${err.code} msg=${err.errmsg} labels=${err.errorLabels}`
+              `<!> unrecognized mongo error: code=${err.code} msg=${err.errmsg} labels=${err.errorLabels}`
             );
           }
         } else if (err instanceof FetchError) {
