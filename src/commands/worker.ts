@@ -32,7 +32,9 @@ function emojiHandler(run: YTEmojiRun) {
   // https://codepoints.net/specials
   const term =
     emoji.isCustomEmoji || emoji.emojiId === ""
-      ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
+      ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFA${
+          emoji.image.thumbnails[0].url
+        }\uFFFB`
       : emoji.emojiId;
 
   return term;
