@@ -9,7 +9,7 @@ export class Placeholder {
   @prop({ required: true, unique: true })
   id!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   originVideoId!: string;
 
   @prop({ required: true, index: true })

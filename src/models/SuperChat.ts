@@ -25,16 +25,16 @@ export class SuperChat {
   @prop({ required: true })
   public purchaseAmount!: number;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public currency!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public significance!: number;
 
   @prop({ required: true })
   public color!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public originVideoId!: string;
 
   @prop({ required: true, index: true })

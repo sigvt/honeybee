@@ -6,10 +6,10 @@ export class BanAction {
   @prop({ required: true, index: true })
   channelId!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   originVideoId!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   originChannelId!: string;
 
   @prop({ required: true, index: true })

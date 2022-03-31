@@ -25,7 +25,7 @@ export class SuperSticker {
   @prop({ required: true })
   public amount!: number;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public currency!: string;
 
   @prop()
@@ -37,7 +37,7 @@ export class SuperSticker {
   // @prop({ required: true })
   // public color!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public originVideoId!: string;
 
   @prop({ required: true, index: true })

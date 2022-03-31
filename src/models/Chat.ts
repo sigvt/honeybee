@@ -17,16 +17,16 @@ export class Chat {
   @prop()
   public membership?: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public isVerified!: Boolean;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public isOwner!: Boolean;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public isModerator!: Boolean;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public originVideoId!: string;
 
   @prop({ required: true, index: true })

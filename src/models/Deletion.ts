@@ -9,10 +9,10 @@ export class Deletion {
   @prop({ required: true })
   retracted!: Boolean;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   originVideoId!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   originChannelId!: string;
 
   @prop({ required: true, index: true })

@@ -32,7 +32,7 @@ export class Milestone {
   @prop()
   public since?: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public originVideoId!: string;
 
   @prop({ required: true, index: true })

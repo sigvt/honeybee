@@ -11,7 +11,7 @@ export class ModeChange {
   @prop({ required: true, index: true })
   timestamp!: Date;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   mode!: string;
 
   @prop({ required: true })
@@ -20,7 +20,7 @@ export class ModeChange {
   @prop({ required: true })
   description!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   originVideoId!: string;
 
   @prop({ required: true, index: true })
