@@ -60,31 +60,14 @@ services:
   # MongoDB Kafka Connector
   connect:
     image: ${KAFKA_CONNECT_IMAGE}
-    build: docker/mongodb-kafka-connector
+    build: kafka-connect
     hostname: connect
     depends_on:
       - mongo
       - redpanda
-    ports:
-      - "8083:8083"
     environment:
       MONGO_URI: "mongodb://mongo:27017/?replicaSet=hb0"
       MONGO_DATABASE: "honeybee"
-      CONNECT_BOOTSTRAP_SERVERS: "redpanda:9092"
-      CONNECT_REST_ADVERTISED_HOST_NAME: connect
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: connect
-      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
-      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_STATUS_STORAGE_TOPIC: connect-status
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
-      CONNECT_CONNECTIONS_MAX_IDLE_MS: 180000
-      CONNECT_METADATA_MAX_AGE_MS: 180000
-      CONNECT_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      
+      KAFKA_URI: "redpanda:9092"
+      KAFKA_TOPIC: "chats"
+      CONN_CHANNEL_CAPACITY: "1200"

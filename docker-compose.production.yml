@@ -78,7 +78,7 @@ services:
   # Kafka-compatible data streaming pipeline
   redpanda:
     image: docker.vectorized.io/vectorized/redpanda:latest
-    command: redpanda start --smp '1' --reserve-memory 8000M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
+    command: redpanda start --smp '1' --reserve-memory 4000M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
     ports:
       - "9093:9093"
     deploy:
@@ -96,28 +96,12 @@ services:
     depends_on:
       - mongo
       - redpanda
-    ports:
-      - "8083:8083"
     environment:
       MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/?replicaSet=hb0&authSource=vespa
       MONGO_DATABASE: ${MONGO_DATABASE}
-      CONNECT_BOOTSTRAP_SERVERS: "redpanda:9092"
-      CONNECT_REST_ADVERTISED_HOST_NAME: connect
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: connect
-      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
-      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_STATUS_STORAGE_TOPIC: connect-status
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
-      CONNECT_CONNECTIONS_MAX_IDLE_MS: 180000
-      CONNECT_METADATA_MAX_AGE_MS: 180000
-      CONNECT_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      KAFKA_URI: "redpanda:9092"
+      KAFKA_TOPIC: "chats"
+      CONN_CHANNEL_CAPACITY: "5000"
     deploy:
       replicas: 1
       placement:

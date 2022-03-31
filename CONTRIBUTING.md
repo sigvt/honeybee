@@ -151,18 +151,8 @@ docker-compose exec redpanda rpk cluster info
 docker-compose exec redpanda rpk topic list
 
 # Consume
-docker-compose exec redpanda rpk topic consume honeybee.chats
+docker-compose exec redpanda rpk topic consume --offset end chats
 
 # Delete
-docker-compose exec redpanda rpk topic delete honeybee.chats
-```
-
-## MongoDB Kafka Connector
-
-```bash
-# List
-curl -X GET http://localhost:8083/connectors
-
-# Delete
-curl -X DELETE http://localhost:8083/connectors/mongo-source
+docker-compose exec redpanda rpk topic delete chats
 ```
