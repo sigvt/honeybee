@@ -290,10 +290,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                       originChannelId: mc.channelId,
                     };
                   });
-                  videoLog(
-                    "replaceChat:",
-                    payload.map((p) => p.id)
-                  );
+                  // videoLog("replaceChat:", payload?.length);
                   await ChatModel.insertMany(payload, insertOptions);
                   break;
                 }
@@ -353,7 +350,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                 originChannelId: mc.channelId,
               };
             });
-            videoLog("<!> pollResult", JSON.stringify(payload));
+            // videoLog("<!> pollResult", JSON.stringify(payload));#
             // TODO: await Poll.insertMany(payload, insertOptions);
           }
           // case "addViewerEngagementMessageAction":

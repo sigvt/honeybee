@@ -71,6 +71,9 @@ services:
       mode: global
       restart_policy:
         condition: on-failure
+    dns:
+      - "10.0.1.101"
+      - "1.1.1.1"
 
   # Kafka-compatible data streaming pipeline
   redpanda:
