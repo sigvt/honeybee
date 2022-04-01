@@ -32,7 +32,7 @@ services:
     volumes:
       - ${DATA_DIR:-./data}/cache:/cache
       - "./lib:/app/lib"
-      - "./node_modules:/app/node_modules"
+      # - "./node_modules:/app/node_modules"
     depends_on:
       - redis
 
@@ -45,7 +45,7 @@ services:
       DEBUG: masterchat
     volumes:
       - "./lib:/app/lib"
-      - "./node_modules:/app/node_modules"
+      # - "./node_modules:/app/node_modules"
     depends_on:
       - redis
       - mongo

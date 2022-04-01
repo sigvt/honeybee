@@ -171,7 +171,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                 id: action.id,
                 level: action.level,
                 since: action.membership.since,
-                authorName: action.authorName,
+                authorName: action.authorName!,
                 authorChannelId: action.authorChannelId,
                 originVideoId: mc.videoId,
                 originChannelId: mc.channelId,
