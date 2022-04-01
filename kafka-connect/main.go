@@ -73,7 +73,7 @@ func sinkToKafka(routineCtx context.Context, kafkaWriter *kafka.Writer, docs cha
 		}
 		buf = append(buf, msg)
 
-		if len(buf) > bufSize || time.Since(invoked).Seconds() > 5 {
+		if len(buf) > bufSize || time.Since(invoked).Seconds() > 1 {
 
 			fmt.Printf("Sinking %v / %v\n", len(buf), len(docs))
 
