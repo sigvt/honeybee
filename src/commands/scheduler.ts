@@ -87,7 +87,7 @@ export async function runScheduler() {
 
     handledVideoIdCache.add(videoId);
 
-    await timeoutThen(500);
+    // await timeoutThen(500);
   }
 
   async function checkStalledJobs() {
@@ -223,6 +223,7 @@ Delayed=${health.delayed}`
     );
 
     handledVideoIdCache.clear();
+    await checkStalledJobs();
 
     schedule.scheduleJob("*/5 * * * *", rearrange);
     schedule.scheduleJob("*/1 * * * *", checkStalledJobs);

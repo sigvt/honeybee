@@ -53,7 +53,16 @@ services:
   # Kafka-compatible data streaming pipeline
   redpanda:
     image: docker.vectorized.io/vectorized/redpanda:latest
-    command: redpanda start --smp '1' --reserve-memory 4000M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 4G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
+      - --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
     ports:
       - "9093:9093"
 
@@ -69,5 +78,4 @@ services:
       MONGO_URI: "mongodb://mongo:27017/?replicaSet=hb0"
       MONGO_DATABASE: "honeybee"
       KAFKA_URI: "redpanda:9092"
-      KAFKA_TOPIC: "chats"
       CONN_CHANNEL_CAPACITY: "1200"

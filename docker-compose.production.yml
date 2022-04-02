@@ -78,7 +78,11 @@ services:
   # Kafka-compatible data streaming pipeline
   redpanda:
     image: docker.vectorized.io/vectorized/redpanda:latest
-    command: redpanda start --smp '1' --reserve-memory 4000M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
+    command: redpanda start --smp '1' --memory 4G --reserve-memory 0M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://${REDPANDA_HOST}
+    environment:
+      VIRTUAL_HOST: ${REDPANDA_HOST}
+      VIRTUAL_PORT: 9093
+      LETSENCRYPT_HOST: ${REDPANDA_HOST}
     ports:
       - "9093:9093"
     deploy:
@@ -88,19 +92,20 @@ services:
           - node.hostname == ${MAIN_NODE_HOSTNAME}
       restart_policy:
         condition: on-failure
+    networks:
+      - default
+      - webproxy
 
   # MongoDB Kafka Connector
   connect:
     image: ${KAFKA_CONNECT_IMAGE}
-    hostname: connect
     depends_on:
       - mongo
       - redpanda
     environment:
-      MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/?replicaSet=hb0&authSource=vespa
+      MONGO_URI: mongodb://${MONGO_WORKER_USERNAME}:${MONGO_WORKER_PASSWORD}@mongo/?replicaSet=hb0&authSource=${MONGO_DATABASE}
       MONGO_DATABASE: ${MONGO_DATABASE}
       KAFKA_URI: "redpanda:9092"
-      KAFKA_TOPIC: "chats"
       CONN_CHANNEL_CAPACITY: "5000"
     deploy:
       replicas: 1
@@ -138,4 +143,7 @@ services:
 networks:
   default:
     name: ${HONEYBEE_NETWORK}
+    external: true
+  webproxy:
+    name: webproxy
     external: true
