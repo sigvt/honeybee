@@ -15,6 +15,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o main
 
 FROM scratch
 
-COPY --from=builder /app/main /app/main
+COPY --from=builder /app/main /app/kafka-connect
 
-ENTRYPOINT ["/app/main"]
+ENTRYPOINT ["/app/kafka-connect"]

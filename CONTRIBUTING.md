@@ -7,6 +7,9 @@ yarn install
 yarn dev
 docker-compose build
 docker-compose up
+docker-compose exec mongo mongo
+> rs.initiate()
+exit
 ```
 
 ### Inspect
