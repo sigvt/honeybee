@@ -1,3 +1,5 @@
+import https from "https";
+import axios from "axios";
 import BeeQueue from "bee-queue";
 import {
   Action,
@@ -58,7 +60,15 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
     },
   } = job.data;
 
-  const mc = new Masterchat(videoId, channelId, { mode: "live" });
+  const mc = new Masterchat(videoId, channelId, {
+    mode: "live",
+    axiosInstance: axios.create({
+      timeout: 4000,
+      httpsAgent: new https.Agent({
+        keepAlive: true,
+      }),
+    }),
+  });
   let stats: Stats = { handled: 0, errors: 0, isWarmingUp: true };
 
   function videoLog(...obj: any) {

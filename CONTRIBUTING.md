@@ -1,8 +1,10 @@
 # Contribution Guide
 
-## Local Development
+## Local development
 
 ```bash
+cp .env.placeholder .env
+vim .env
 yarn install
 yarn dev
 docker-compose build
@@ -18,7 +20,7 @@ exit
 MONGO_URI=mongodb://localhost/honeybee lib/index.js inspect
 ```
 
-## Spin up a cluster
+## Bootstrapping a production cluster
 
 ```bash
 cp .env.placeholder .env
