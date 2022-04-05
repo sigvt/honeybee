@@ -79,10 +79,6 @@ services:
   redpanda:
     image: docker.vectorized.io/vectorized/redpanda:latest
     command: redpanda start --smp '1' --memory 4G --reserve-memory 0M --overprovisioned --node-id '0' --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093 --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://${REDPANDA_HOST}
-    environment:
-      VIRTUAL_HOST: ${REDPANDA_HOST}
-      VIRTUAL_PORT: 9093
-      LETSENCRYPT_HOST: ${REDPANDA_HOST}
     ports:
       - "9093:9093"
     deploy:
@@ -92,9 +88,6 @@ services:
           - node.hostname == ${MAIN_NODE_HOSTNAME}
       restart_policy:
         condition: on-failure
-    networks:
-      - default
-      - webproxy
 
   # MongoDB Kafka Connector
   connect:
@@ -143,7 +136,4 @@ services:
 networks:
   default:
     name: ${HONEYBEE_NETWORK}
-    external: true
-  webproxy:
-    name: webproxy
     external: true
