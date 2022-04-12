@@ -32,11 +32,15 @@ function emojiHandler(run: YTEmojiRun) {
   const { emoji } = run;
 
   // https://codepoints.net/specials
+  // const term =
+  //   emoji.isCustomEmoji || emoji.emojiId === ""
+  //     ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFA${
+  //         emoji.image.thumbnails[0].url
+  //       }\uFFFB`
+  //     : emoji.emojiId;
   const term =
     emoji.isCustomEmoji || emoji.emojiId === ""
-      ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFA${
-          emoji.image.thumbnails[0].url
-        }\uFFFB`
+      ? `\uFFF9${emoji.shortcuts[emoji.shortcuts.length - 1]}\uFFFB`
       : emoji.emojiId;
 
   return term;
