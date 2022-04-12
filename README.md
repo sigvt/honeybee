@@ -1,6 +1,6 @@
-# 🍯🐝 honeybee
+# 🍯🐝 Honeybee
 
-![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header2.png)
+![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header3.png)
 
 Honeybee is a distributed YouTube live chat and moderation events collector.
 
@@ -12,4 +12,4 @@ Honeybee is a distributed YouTube live chat and moderation events collector.
 
 ## Contribute
 
-Have ideas to improve the system? Please [open an issue](https://github.com/holodata/honeybee/issues), or join `#honeybee` channel on [holodata Discord](https://holodata.org/discord).
+Have ideas to improve Honeybee? Please [open an issue](https://github.com/holodata/honeybee/issues), or join `#honeybee` channel on [holodata Discord](https://holodata.org/discord).
