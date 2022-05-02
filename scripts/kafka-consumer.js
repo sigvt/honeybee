@@ -1,5 +1,6 @@
 const uuidv4 = require("uuid").v4;
 const { Kafka } = require("kafkajs");
+const axios = require("axios");
 
 const kafka = new Kafka({
   clientId: "chat-consumer",
@@ -8,9 +9,13 @@ const kafka = new Kafka({
 
 const consumer = kafka.consumer({ groupId: uuidv4() });
 
+async function sinkToGroonga(msgs) {
+  await axios.post("http://localhost:10041/d/load?table=chats", msgs);
+}
+
 async function convertMessage(msg) {
   const payload = JSON.parse(msg.value.toString());
-  return payload;
+  return { _key: payload.id, msg: payload.msg, author: payload.aut };
 }
 
 async function exportMessages(msgs) {
@@ -24,7 +29,7 @@ async function connect(topicToSubscribe) {
   return consumer.run({
     eachBatch: async ({ batch }) => {
       const messages = await Promise.all(batch.messages.map(convertMessage));
-      await exportMessages(messages);
+      await sinkToGroonga(messages);
     },
   });
 }

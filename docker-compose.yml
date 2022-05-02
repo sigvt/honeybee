@@ -81,3 +81,11 @@ services:
       MONGO_DATABASE: "honeybee"
       KAFKA_URI: "redpanda:9092"
       CONN_CHANNEL_CAPACITY: "1200"
+
+  groonga:
+    image: groonga/groonga:latest
+    command: groonga -s --protocol http -l debug --log-path - --query-log-path - -n /mnt/db/data.db
+    ports:
+      - "10041:10041"
+    volumes:
+      - ./data/groonga:/mnt/db

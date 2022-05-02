@@ -166,3 +166,10 @@ rpk topic consume --offset end chats
 # Delete
 rpk topic delete chats
 ```
+
+## Groonga
+
+```bash
+docker-compose exec groonga groonga -n /mnt/db/data.db
+docker-compose exec groonga groonga /mnt/db/data.db status
+```
