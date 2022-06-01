@@ -61,10 +61,8 @@ services:
       - --reserve-memory 0M
       - --overprovisioned
       - --node-id 0
-      - --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
-      - --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://localhost:9093
     ports:
-      - "9093:9093"
+      - "9092:9092"
 
   # MongoDB Kafka Connector
   connect:
