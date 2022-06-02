@@ -146,9 +146,12 @@ main();
 ## Redpanda (Go-based Kafka)
 
 ```bash
+docker-compose exec redpanda rpk cluster config set auto_create_topics_enabled true
 docker-compose exec redpanda rpk redpanda mode production
 # docker-compose exec redpanda rpk redpanda tune all
+```
 
+```bash
 # Show
 docker-compose exec redpanda rpk cluster info
 

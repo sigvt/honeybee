@@ -12,7 +12,7 @@ COPY package.json yarn.lock /app/
 RUN yarn --frozen-lockfile
 
 # masterchat dev
-RUN git clone https://github.com/holodata/masterchat /masterchat && cd /masterchat && git checkout 912901cf9cea7469d9d02a01939b7b59aa0b59a6 && yarn install --frozen-lockfile && yarn build && yarn link
+RUN git clone https://github.com/holodata/masterchat /masterchat && cd /masterchat && git switch dev && yarn install --frozen-lockfile && yarn build && yarn link
 RUN yarn link masterchat
 
 # build app
