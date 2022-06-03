@@ -61,6 +61,9 @@ services:
       - --reserve-memory 0M
       - --overprovisioned
       - --node-id 0
+    volumes:
+      - ${DATA_DIR:-./data}/redpanda/data:/var/lib/redpanda/data
+      - ${DATA_DIR:-./data}/redpanda/conf:/etc/redpanda
     ports:
       - "9092:9092"
 

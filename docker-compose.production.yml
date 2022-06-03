@@ -90,7 +90,8 @@ services:
       - --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://${REDPANDA_HOST}:9093
       - --check=false
     volumes:
-      - ${DATA_DIR:-./data}/redpanda:/var/lib/redpanda/data
+      - ${DATA_DIR:-./data}/redpanda/data:/var/lib/redpanda/data
+      - ${DATA_DIR:-./data}/redpanda/conf:/etc/redpanda
     ports:
       - "9093:9093"
     deploy:
