@@ -52,7 +52,7 @@ services:
 
   # Kafka-compatible data streaming pipeline
   redpanda:
-    image: docker.vectorized.io/vectorized/redpanda:latest
+    image: docker.vectorized.io/vectorized/redpanda:v22.1.3
     command:
       - redpanda
       - start
