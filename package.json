@@ -22,7 +22,7 @@
     "clui": "^0.3.6",
     "execa": "^5.1.1",
     "kafkajs": "^1.16.0",
-    "masterchat": "0.15.0",
+    "masterchat": "1.1.0",
     "mongoose": "~6.3.4",
     "node-fetch": "^2.0",
     "node-schedule": "^2.0.0",
