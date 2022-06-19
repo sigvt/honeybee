@@ -1,6 +1,6 @@
-import https from "https";
 import axios from "axios";
 import BeeQueue from "bee-queue";
+import https from "https";
 import {
   Action,
   delay,
@@ -22,6 +22,9 @@ import MembershipModel, { Membership } from "../models/Membership";
 import MilestoneModel, { Milestone } from "../models/Milestone";
 import ModeChangeModel, { ModeChange } from "../models/ModeChange";
 import PlaceholderModel, { Placeholder } from "../models/Placeholder";
+import RemoveChatActionModel, {
+  RemoveChatAction,
+} from "../models/RemoveChatAction";
 import SuperChatModel, { SuperChat } from "../models/SuperChat";
 import SuperStickerModel, { SuperSticker } from "../models/SuperSticker";
 import { initMongo } from "../modules/db";
@@ -164,6 +167,18 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             await SuperStickerModel.insertMany(payload, insertOptions);
             break;
           }
+          case "removeChatItemAction": {
+            const payload: RemoveChatAction[] = groupedActions[type].map(
+              (action) => ({
+                targetId: action.targetId,
+                originVideoId: mc.videoId,
+                originChannelId: mc.channelId,
+                timestamp: action.timestamp,
+              })
+            );
+            await RemoveChatActionModel.insertMany(payload, insertOptions);
+            break;
+          }
           case "markChatItemAsDeletedAction": {
             const payload: Deletion[] = groupedActions[type].map((action) => ({
               targetId: action.targetId,
@@ -190,7 +205,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
               (action) => ({
                 id: action.id,
                 level: action.level,
-                since: action.membership.since,
+                since: action.membership?.since,
                 authorName: action.authorName!,
                 authorChannelId: action.authorChannelId,
                 originVideoId: mc.videoId,
@@ -212,7 +227,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                 id: action.id,
                 level: action.level,
                 duration: action.duration,
-                since: action.membership.since,
+                since: action.membership?.since,
                 message: normMessage,
                 authorName: action.authorName,
                 authorChannelId: action.authorChannelId,
@@ -339,7 +354,7 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
                     }
                   );
                   videoLog("<!> replaceSuperChat:", payload);
-                  // TODO
+                  // TODO replaceSuperChat
                   // await SuperChatModel.insertMany(payload, insertOptions);
                   break;
                 }
@@ -375,18 +390,21 @@ async function handleJob(job: BeeQueue.Job<Job>): Promise<Result> {
             // videoLog("<!> pollResult", JSON.stringify(payload));#
             // TODO: await Poll.insertMany(payload, insertOptions);
           }
+          // case "showTooltipAction":
           // case "addViewerEngagementMessageAction":
           // case "showPanelAction":
           // case "closePanelAction":
-          // case "removeBannerAction":
           // case "showPollPanelAction":
           // case "updatePollAction":
+          // case "removeBannerAction":
           // case "addMembershipTickerAction":
           // case "addSuperChatTickerAction":
           // case "addSuperStickerTickerAction":
           // case "membershipGiftPurchaseAction":
           // case "membershipGiftRedemptionAction":
-          // case "showTooltipAction":
+          // case "addIncomingRaidBannerAction":
+          // case "addOutgoingRaidBannerAction":
+          // case "moderationMessageAction":
           //   break;
           // default: {
           //   const _exhaust: never = type;

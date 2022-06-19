@@ -3,7 +3,7 @@ const { Kafka } = require("kafkajs");
 
 const kafka = new Kafka({
   clientId: "chat-consumer",
-  brokers: ["hb.holodata.org:9093"],
+  brokers: ["takos:9093"],
 });
 
 const consumer = kafka.consumer({ groupId: uuidv4() });

@@ -8,7 +8,7 @@ Honeybee is a distributed YouTube live chat and moderation events collector.
 
 - Fetch streams index from Holodex (every 5 minutes)
 - Queue newly scheduled streams to a job pool
-- One of the cluster members takes it and start collecting events
+- One of the cluster members takes it and starts collecting events
 
 ## Contribute
 

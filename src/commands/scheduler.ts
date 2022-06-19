@@ -223,11 +223,11 @@ Delayed=${health.delayed}`
     );
 
     handledVideoIdCache.clear();
+
     await checkStalledJobs();
+    await rearrange(new Date());
 
     schedule.scheduleJob("*/5 * * * *", rearrange);
     schedule.scheduleJob("*/1 * * * *", checkStalledJobs);
-
-    // await rearrange(new Date());
   });
 }

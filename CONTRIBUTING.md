@@ -108,7 +108,7 @@ rs.conf();
 rs.status();
 ```
 
-### Subscribe change stream
+### Subscribe change stream (deprecated)
 
 ```js
 const mongoose = require("mongoose");
@@ -146,18 +146,23 @@ main();
 ## Redpanda (Go-based Kafka)
 
 ```bash
-docker-compose exec redpanda rpk redpanda mode production
-# docker-compose exec redpanda rpk redpanda tune all
+rpk cluster config set auto_create_topics_enabled true
+rpk redpanda mode production
+rpk redpanda tune all
+rpk acl user create admin -p <password> --api-urls localhost:9644
+rpk topic describe test-topic --user admin --password <password> --sasl-mechanism SCRAM-SHA-256 --brokers localhost:9092
+```
 
+```bash
 # Show
-docker-compose exec redpanda rpk cluster info
+rpk cluster info
 
 # List
-docker-compose exec redpanda rpk topic list
+rpk topic list
 
 # Consume
-docker-compose exec redpanda rpk topic consume --offset end chats
+rpk topic consume --offset end chats
 
 # Delete
-docker-compose exec redpanda rpk topic delete chats
+rpk topic delete chats
 ```
