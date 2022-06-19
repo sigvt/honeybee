@@ -86,6 +86,8 @@ services:
       - --reserve-memory 0M
       - --overprovisioned
       - --node-id 0
+      - --set redpanda.enable_transactions=true
+      - --set redpanda.enable_idempotence=true
       - --kafka-addr PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:9093
       - --advertise-kafka-addr PLAINTEXT://redpanda:9092,OUTSIDE://${REDPANDA_HOST}:9093
       - --check=false

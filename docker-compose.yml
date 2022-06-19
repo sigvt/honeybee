@@ -60,6 +60,8 @@ services:
       - --reserve-memory 0M
       - --overprovisioned
       - --node-id 0
+      - --set redpanda.enable_transactions=true
+      - --set redpanda.enable_idempotence=true
     volumes:
       - ${DATA_DIR:-./data}/redpanda/data:/var/lib/redpanda/data
       - ${DATA_DIR:-./data}/redpanda/conf:/etc/redpanda
