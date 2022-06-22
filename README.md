@@ -1,6 +1,6 @@
 # 🍯🐝 Honeybee
 
-![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/header3.png)
+![Header](https://raw.githubusercontent.com/uetchy/honeybee/master/.github/media/header3.png)
 
 Honeybee is a distributed YouTube live chat and moderation events collector.
 
