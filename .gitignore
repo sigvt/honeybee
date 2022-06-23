@@ -1,8 +1,9 @@
 /tmp
 /lib
 /keys
-.env*
 .envrc
+.env*
+!.env.example
 .vscode
 /data*
 __nock-fixtures__

@@ -23,6 +23,6 @@ jobs:
           script_stop: true
           script: |
             cd /srv/honeybee
-            direnv allow
+            set -o allexport; source .env; set +o allexport
             git pull
             make all

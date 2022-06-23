@@ -6,7 +6,8 @@
 /keys
 *.jsonl
 __nock-fixtures__
-.env
+.env*
+!.env.example
 .envrc
 *.log
 crash.log
