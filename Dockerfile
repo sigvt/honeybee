@@ -26,4 +26,4 @@ RUN yarn build && yarn link
 # RUN terraform init -no-color -input=false
 # WORKDIR /app
 
-CMD ["honeybee", "worker"]
+CMD ["node", "lib/index.js", "worker"]

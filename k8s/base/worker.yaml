@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: worker-daemonset
+  labels:
+    app: worker
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - image: pkg.uechi.io/honeybee
+          name: worker
+          envFrom:
+            - configMapRef:
+                name: cm
+          resources: {}
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred

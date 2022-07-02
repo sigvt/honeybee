@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+  labels:
+    app: db
+spec:
+  ports:
+    - name: "27017"
+      port: 27017
+      targetPort: 27017
+  type: NodePort
+  selector:
+    app: db
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-statefulset
+  labels:
+    app: db
+spec:
+  serviceName: db-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - image: mongo:5
+          name: db
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - mountPath: /data/db
+              name: db-pvc
+          # envFrom:
+          #   - configMapRef:
+          #       name: postgres-configuration
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: MONGO_INITDB_ROOT_PASSWORD
+          resources: {}
+      restartPolicy: Always
+      volumes:
+        - name: db-pvc
+          persistentVolumeClaim:
+            claimName: db-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+  labels:
+    type: local
+spec:
+  # storageClassName: manual
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/db

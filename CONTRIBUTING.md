@@ -166,3 +166,17 @@ rpk topic consume --offset end chats
 # Delete
 rpk topic delete chats
 ```
+
+## K8s
+
+```bash
+minikube start
+minikube addons enable registry-creds
+
+skaffold init --compose-file docker-compose.yml
+skaffold build
+
+skaffold dev --port-forward -p dev
+
+minikube dashboard
+```

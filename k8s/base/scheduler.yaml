@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-deployment
+  labels:
+    app: scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scheduler
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: scheduler
+    spec:
+      containers:
+        - image: pkg.uechi.io/honeybee
+          name: scheduler
+          args: ["node", "lib/index.js", "scheduler"]
+          envFrom:
+            - configMapRef:
+                name: cm
+          env:
+            - name: HOLODEX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: secrets
+                  key: HOLODEX_API_KEY
+          resources: {}
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred

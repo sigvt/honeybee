@@ -1,0 +1,36 @@
+apiVersion: skaffold/v2beta24
+kind: Config
+metadata:
+  name: honeybee
+
+build:
+  artifacts:
+    - image: pkg.uechi.io/honeybee
+      sync:
+        infer:
+          - "lib/**/*.js"
+      docker:
+        dockerfile: Dockerfile
+deploy:
+  kustomize:
+    paths:
+      - k8s/overlays/dev
+
+profiles:
+  - name: dev
+    deploy:
+      kustomize:
+        paths:
+          - k8s/overlays/dev
+  - name: production
+    deploy:
+      kustomize:
+        paths:
+          - k8s/overlays/production
+
+portForward:
+  - resourceType: service
+    resourceName: db
+    namespace: default
+    port: 27017
+    localPort: 27017
