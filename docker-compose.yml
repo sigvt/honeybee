@@ -81,3 +81,18 @@ services:
       MONGO_DATABASE: "honeybee"
       KAFKA_URI: "redpanda:9092"
       CONN_CHANNEL_CAPACITY: "1200"
+
+  # Quickwit full-text search engine
+  qw_indexer:
+    image: quickwit/quickwit
+    # command: service run search
+    command: service run indexer --indexes honeybee-chats
+    environment:
+      QW_DISABLE_TELEMETRY: "1"
+    ports:
+      - "7280:7280"
+      - "7281:7281"
+    volumes:
+     - ./data/qwdata:/quickwit/qwdata
+     - ./docker/quickwit:/data
+

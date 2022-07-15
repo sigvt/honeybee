@@ -1,0 +1,42 @@
+version: 0
+
+index_id: honeybee-chats
+
+doc_mapping:
+  field_mappings:
+    - name: timestamp
+      type: date
+      fast: true
+    - name: id
+      type: text
+      tokenizer: raw
+    - name: message
+      type: text
+      tokenizer: default
+      record: position
+    - name: authorName
+      type: text
+      tokenizer: default
+    # - name: originChannelId
+    #   type: text
+    #   tokenizer: raw
+    # - name: originVideoId
+    #   type: text
+    #   tokenizer: raw
+  # tag_fields: [originChannelId]
+  store_source: false
+
+search_settings:
+  default_search_fields: [message, authorName]
+
+# indexing_settings:
+#   timestamp_field: timestamp
+
+sources:
+  - source_id: honeybee-kafka-source
+    source_type: kafka
+    params:
+      topic: honeybee.chats
+      client_params:
+        bootstrap.servers: redpanda:9092
+        group.id: PRcxRnCNMbUvZYVv5

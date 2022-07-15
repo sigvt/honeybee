@@ -166,3 +166,27 @@ rpk topic consume --offset end chats
 # Delete
 rpk topic delete chats
 ```
+
+## Quickwit
+
+Quickwit is a fast and lightweight full-text search engine written in Rust.
+
+```bash
+# Add
+docker-compose run --rm qw_indexer index create --index-config /data/honeybee_index_config.yaml
+docker-compose restart qw_indexer
+
+# Describe
+docker-compose exec qw_indexer quickwit index describe --index honeybee-chats
+
+# Search
+docker-compose exec qw_indexer quickwit index search --index honeybee-chats --query "ナイス"
+
+# Delete
+docker-compose exec qw_indexer quickwit index delete --index honeybee-chats
+```
+
+### References
+
+- [Convert a Standalone to a Replica Set — MongoDB Manual](https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/)
+- [Change Streams — MongoDB Manual](https://docs.mongodb.com/manual/changeStreams/)
