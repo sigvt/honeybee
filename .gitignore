@@ -3,6 +3,7 @@
 /keys
 .envrc
 .env*
+*.env
 !.env.example
 .vscode
 /data*
